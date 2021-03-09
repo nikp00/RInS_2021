@@ -1,0 +1,8 @@
+prefix=/home/nik/ROS_ws/devel
+
+Name: simulation_envoirment
+Description: Description of simulation_envoirment
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

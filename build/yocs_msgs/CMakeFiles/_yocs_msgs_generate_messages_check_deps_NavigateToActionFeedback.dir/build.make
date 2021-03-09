@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/nik/ROS_ws/build
 include yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_NavigateToActionFeedback.dir/progress.make
 
 yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_NavigateToActionFeedback:
-	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionFeedback.msg yocs_msgs/NavigateToFeedback:actionlib_msgs/GoalStatus:actionlib_msgs/GoalID:std_msgs/Header
+	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionFeedback.msg std_msgs/Header:actionlib_msgs/GoalStatus:yocs_msgs/NavigateToFeedback:actionlib_msgs/GoalID
 
 _yocs_msgs_generate_messages_check_deps_NavigateToActionFeedback: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_NavigateToActionFeedback
 _yocs_msgs_generate_messages_check_deps_NavigateToActionFeedback: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_NavigateToActionFeedback.dir/build.make
