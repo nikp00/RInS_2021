@@ -1,0 +1,4 @@
+string movementType
+int16 duration
+---
+string movementType

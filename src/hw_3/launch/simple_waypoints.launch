@@ -1,0 +1,3 @@
+<launch>
+    <node name="simple_waypoints_publisher" pkg="hw_3" type="simple_waypoints.py" output="screen" args="$(find hw_3)/data/waypoints.json" />
+</launch>

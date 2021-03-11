@@ -1,0 +1,8 @@
+prefix=/home/nik/ROS_ws/install
+
+Name: hw_3
+Description: Description of hw_3
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: message_runtime
