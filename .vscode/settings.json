@@ -3,5 +3,6 @@
         "/home/nik/ROS_ws/devel/lib/python3/dist-packages",
         "/home/nik/ROS_vaje/devel/lib/python3/dist-packages",
         "/opt/ros/noetic/lib/python3/dist-packages"
-    ]
+    ],
+    "python.formatting.provider": "black"
 }

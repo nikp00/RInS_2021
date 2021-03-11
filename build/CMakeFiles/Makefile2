@@ -71,6 +71,7 @@ all: turtlebot_interactions/turtlebot_rviz_launchers/all
 all: turtlebot_simulator/turtlebot_simulator/all
 all: turtlebot_simulator/turtlebot_stage/all
 all: turtlebot_simulator/turtlebot_stdr/all
+all: hw_3/all
 all: kobuki/kobuki_keyop/all
 all: kobuki/kobuki_auto_docking/all
 all: depthimage_to_laserscan/all
@@ -127,6 +128,7 @@ preinstall: turtlebot_interactions/turtlebot_rviz_launchers/preinstall
 preinstall: turtlebot_simulator/turtlebot_simulator/preinstall
 preinstall: turtlebot_simulator/turtlebot_stage/preinstall
 preinstall: turtlebot_simulator/turtlebot_stdr/preinstall
+preinstall: hw_3/preinstall
 preinstall: kobuki/kobuki_keyop/preinstall
 preinstall: kobuki/kobuki_auto_docking/preinstall
 preinstall: depthimage_to_laserscan/preinstall
@@ -188,6 +190,7 @@ clean: turtlebot_interactions/turtlebot_rviz_launchers/clean
 clean: turtlebot_simulator/turtlebot_simulator/clean
 clean: turtlebot_simulator/turtlebot_stage/clean
 clean: turtlebot_simulator/turtlebot_stdr/clean
+clean: hw_3/clean
 clean: kobuki/kobuki_keyop/clean
 clean: kobuki/kobuki_auto_docking/clean
 clean: depthimage_to_laserscan/clean
@@ -327,6 +330,33 @@ gtest/googletest/clean: gtest/googletest/CMakeFiles/gtest_main.dir/clean
 gtest/googletest/clean: gtest/googletest/CMakeFiles/gtest.dir/clean
 
 .PHONY : gtest/googletest/clean
+
+#=============================================================================
+# Directory level rules for directory hw_3
+
+# Recursive "all" directory target.
+hw_3/all:
+
+.PHONY : hw_3/all
+
+# Recursive "preinstall" directory target.
+hw_3/preinstall:
+
+.PHONY : hw_3/preinstall
+
+# Recursive "clean" directory target.
+hw_3/clean: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
+hw_3/clean: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/clean
+hw_3/clean: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
+hw_3/clean: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/clean
+hw_3/clean: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean
+hw_3/clean: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
+hw_3/clean: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
+hw_3/clean: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
+hw_3/clean: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
+hw_3/clean: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
+
+.PHONY : hw_3/clean
 
 #=============================================================================
 # Directory level rules for directory kobuki/kobuki
@@ -472,26 +502,16 @@ kobuki/kobuki_keyop/preinstall: kobuki/kobuki_keyop/src/preinstall
 .PHONY : kobuki/kobuki_keyop/preinstall
 
 # Recursive "clean" directory target.
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
+kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean
+kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_cpp.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_eus.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_lisp.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_nodejs.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_py.dir/clean
-kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/clean
 kobuki/kobuki_keyop/clean: kobuki/kobuki_keyop/src/clean
 
 .PHONY : kobuki/kobuki_keyop/clean
@@ -3334,112 +3354,274 @@ kobuki_msgs/CMakeFiles/_kobuki_msgs_generate_messages_check_deps_ScanAngle.dir/c
 .PHONY : kobuki_msgs/CMakeFiles/_kobuki_msgs_generate_messages_check_deps_ScanAngle.dir/clean
 
 #=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir
+# Target rules for target hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir
 
 # All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_nodejs"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_cpp"
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
 
 # Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule: cmake_check_build_system
+hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
 
 # Convenience name for target.
-rosgraph_msgs_generate_messages_nodejs: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
+roscpp_generate_messages_cpp: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
+
+.PHONY : roscpp_generate_messages_cpp
+
+# clean rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/roscpp_generate_messages_eus.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_eus"
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+roscpp_generate_messages_eus: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/rule
+
+.PHONY : roscpp_generate_messages_eus
+
+# clean rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/clean
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_nodejs"
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+rosgraph_msgs_generate_messages_nodejs: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/rule
 
 .PHONY : rosgraph_msgs_generate_messages_nodejs
 
 # clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/clean
 
 #=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir
+# Target rules for target hw_3/CMakeFiles/roscpp_generate_messages_py.dir
 
 # All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_lisp"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_lisp: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_lisp
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
-
-#=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_eus"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_eus: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_eus
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
-
-#=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/build
+hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_py.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_py.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_py.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_py.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_py"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
 
 # Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/rule: cmake_check_build_system
+hw_3/CMakeFiles/roscpp_generate_messages_py.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/rule
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_py.dir/rule
 
 # Convenience name for target.
-roscpp_generate_messages_py: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/rule
+roscpp_generate_messages_py: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/rule
 
 .PHONY : roscpp_generate_messages_py
 
 # clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/clean
+hw_3/CMakeFiles/roscpp_generate_messages_py.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_py.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_py.dir/clean
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_py.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_nodejs"
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+roscpp_generate_messages_nodejs: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
+
+.PHONY : roscpp_generate_messages_nodejs
+
+# clean rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_cpp"
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+rosgraph_msgs_generate_messages_cpp: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
+
+.PHONY : rosgraph_msgs_generate_messages_cpp
+
+# clean rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_eus"
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+rosgraph_msgs_generate_messages_eus: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/rule
+
+.PHONY : rosgraph_msgs_generate_messages_eus
+
+# clean rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_lisp"
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+rosgraph_msgs_generate_messages_lisp: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/rule
+
+.PHONY : rosgraph_msgs_generate_messages_lisp
+
+# clean rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_lisp"
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+roscpp_generate_messages_lisp: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
+
+.PHONY : roscpp_generate_messages_lisp
+
+# clean rule for target.
+hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
+.PHONY : hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
+
+#=============================================================================
+# Target rules for target hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir
+
+# All Build rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/depend
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_py"
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
+
+# Build rule for subdir invocation for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
+
+# Convenience name for target.
+rosgraph_msgs_generate_messages_py: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
+
+.PHONY : rosgraph_msgs_generate_messages_py
+
+# clean rule for target.
+hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean:
+	$(MAKE) -f hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
+.PHONY : hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
 
 #=============================================================================
 # Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir
@@ -3469,60 +3651,6 @@ kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/clean:
 .PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/clean
 
 #=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_cpp"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_cpp: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_cpp
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/clean
-
-#=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_nodejs"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_nodejs: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/rule
-
-.PHONY : roscpp_generate_messages_nodejs
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/clean
-
-#=============================================================================
 # Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir
 
 # All Build rule for target.
@@ -3550,31 +3678,58 @@ kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/clean:
 .PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/clean
 
 #=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir
+# Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir
 
 # All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_cpp"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all:
+	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/depend
+	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target geometry_msgs_generate_messages_cpp"
+.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 
 # Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/rule: cmake_check_build_system
+kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
+.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
 
 # Convenience name for target.
-roscpp_generate_messages_cpp: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/rule
+geometry_msgs_generate_messages_cpp: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
 
-.PHONY : roscpp_generate_messages_cpp
+.PHONY : geometry_msgs_generate_messages_cpp
 
 # clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/clean
+kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean:
+	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean
+.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean
+
+#=============================================================================
+# Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir
+
+# All Build rule for target.
+kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all:
+	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/depend
+	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target geometry_msgs_generate_messages_nodejs"
+.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
+
+# Build rule for subdir invocation for target.
+kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
+.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+geometry_msgs_generate_messages_nodejs: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
+
+.PHONY : geometry_msgs_generate_messages_nodejs
+
+# clean rule for target.
+kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean:
+	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean
+.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean
 
 #=============================================================================
 # Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir
@@ -3658,114 +3813,6 @@ kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_eus.dir/clean:
 .PHONY : kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_eus.dir/clean
 
 #=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target rosgraph_msgs_generate_messages_py"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-
-# Convenience name for target.
-rosgraph_msgs_generate_messages_py: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/rule
-
-.PHONY : rosgraph_msgs_generate_messages_py
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/build.make kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/clean
-
-#=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target geometry_msgs_generate_messages_cpp"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
-
-# Convenience name for target.
-geometry_msgs_generate_messages_cpp: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
-
-.PHONY : geometry_msgs_generate_messages_cpp
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/clean
-
-#=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target geometry_msgs_generate_messages_nodejs"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
-
-# Convenience name for target.
-geometry_msgs_generate_messages_nodejs: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
-
-.PHONY : geometry_msgs_generate_messages_nodejs
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/clean
-
-#=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_lisp"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_lisp: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/rule
-
-.PHONY : roscpp_generate_messages_lisp
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/clean
-
-#=============================================================================
 # Target rules for target kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_lisp.dir
 
 # All Build rule for target.
@@ -3847,33 +3894,6 @@ kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_py.dir/clean:
 .PHONY : kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_py.dir/clean
 
 #=============================================================================
-# Target rules for target kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir
-
-# All Build rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/depend
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num= "Built target roscpp_generate_messages_eus"
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
-
-# Build rule for subdir invocation for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/nik/ROS_ws/build/CMakeFiles 0
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-
-# Convenience name for target.
-roscpp_generate_messages_eus: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/rule
-
-.PHONY : roscpp_generate_messages_eus
-
-# clean rule for target.
-kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/clean:
-	$(MAKE) -f kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/build.make kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/clean
-.PHONY : kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/clean
-
-#=============================================================================
 # Target rules for target kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir
 
 # All Build rule for target.
@@ -3892,26 +3912,26 @@ kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki_msgs/CMakeFiles/kobuki_
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_cpp.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_eus.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_lisp.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_nodejs.dir/all
 kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_py.dir/all
-kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
 	$(MAKE) -f kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/build.make kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/depend
 	$(MAKE) -f kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/build.make kobuki/kobuki_keyop/src/CMakeFiles/keyop.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=6 "Built target keyop"
@@ -3980,21 +4000,21 @@ kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki_ms
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_nodejs.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_eus.dir/all
 kobuki/kobuki_auto_docking/CMakeFiles/kobuki_auto_docking_ros.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_lisp.dir/all
@@ -5277,21 +5297,21 @@ kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki_msgs
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_cpp.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_nodejs.dir/all
 kobuki/kobuki_bumper2pc/CMakeFiles/kobuki_bumper2pc_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/bond_generate_messages_py.dir/all
@@ -5916,26 +5936,26 @@ kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuk
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
+kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_cpp.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_eus.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_lisp.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_nodejs.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_py.dir/all
-kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_nodejs.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_eus.dir/all
 kobuki_desktop/kobuki_gazebo_plugins/CMakeFiles/gazebo_ros_kobuki.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_lisp.dir/all
@@ -6631,16 +6651,16 @@ kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/a
 kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_cpp.dir/all
 kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_nodejs.dir/all
 kobuki/kobuki_controller_tutorial/CMakeFiles/bump_blink_controller_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/bond_generate_messages_py.dir/all
@@ -6692,21 +6712,21 @@ kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kob
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_cpp.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_nodejs.dir/all
 kobuki/kobuki_random_walker/CMakeFiles/kobuki_random_walker_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/bond_generate_messages_py.dir/all
@@ -6758,21 +6778,21 @@ kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
-kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_cpp.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nodelet_generate_messages_nodejs.dir/all
 kobuki/kobuki_safety_controller/CMakeFiles/kobuki_safety_controller_nodelet.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/bond_generate_messages_py.dir/all
@@ -7149,8 +7169,8 @@ yocs_msgs/CMakeFiles/yocs_msgs_gencpp.dir/clean:
 # All Build rule for target.
 yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: kobuki_msgs/CMakeFiles/std_msgs_generate_messages_cpp.dir/all
 yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_cpp.dir/all
 yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
+yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_cpp.dir/all
 yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_WaypointListService.dir/all
 yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_LocalizeResult.dir/all
 yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp.dir/all: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_LocalizeGoal.dir/all
@@ -9464,26 +9484,26 @@ kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki_msgs/CMakeF
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_py.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki_msgs/CMakeFiles/kobuki_msgs_generate_messages_lisp.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki_msgs/CMakeFiles/actionlib_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_eus.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_py.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_eus.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_lisp.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/roscpp_generate_messages_lisp.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: hw_3/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_eus.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_nodejs.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_cpp.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
+kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_py.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_cpp.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_eus.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/rosgraph_msgs_generate_messages_py.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_lisp.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_lisp.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_nodejs.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/std_srvs_generate_messages_py.dir/all
-kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_keyop/CMakeFiles/roscpp_generate_messages_eus.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_nodejs.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_eus.dir/all
 kobuki/kobuki_node/src/library/CMakeFiles/kobuki_ros.dir/all: kobuki/kobuki_auto_docking/CMakeFiles/nav_msgs_generate_messages_lisp.dir/all
