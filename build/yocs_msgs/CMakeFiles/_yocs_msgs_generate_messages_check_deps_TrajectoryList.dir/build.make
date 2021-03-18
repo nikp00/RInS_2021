@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/nik/ROS_ws/build
 include yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TrajectoryList.dir/progress.make
 
 yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TrajectoryList:
-	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/src/yocs_msgs/msg/TrajectoryList.msg yocs_msgs/Trajectory:yocs_msgs/Waypoint:geometry_msgs/Pose:geometry_msgs/Point:std_msgs/Header:geometry_msgs/Quaternion
+	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/src/yocs_msgs/msg/TrajectoryList.msg std_msgs/Header:geometry_msgs/Pose:geometry_msgs/Point:yocs_msgs/Waypoint:geometry_msgs/Quaternion:yocs_msgs/Trajectory
 
 _yocs_msgs_generate_messages_check_deps_TrajectoryList: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TrajectoryList
 _yocs_msgs_generate_messages_check_deps_TrajectoryList: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TrajectoryList.dir/build.make
