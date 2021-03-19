@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/nik/ROS_ws/build
 include yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_Waypoint.dir/progress.make
 
 yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_Waypoint:
-	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg geometry_msgs/Quaternion:geometry_msgs/Point:std_msgs/Header:geometry_msgs/Pose
+	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg std_msgs/Header:geometry_msgs/Point:geometry_msgs/Quaternion:geometry_msgs/Pose
 
 _yocs_msgs_generate_messages_check_deps_Waypoint: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_Waypoint
 _yocs_msgs_generate_messages_check_deps_Waypoint: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_Waypoint.dir/build.make

@@ -107,50 +107,50 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Wall.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Wall.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Generating C++ code from yocs_msgs/Wall.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/Wall.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/WallList.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Wall.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WallList.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Generating C++ code from yocs_msgs/WallList.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/WallList.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Column.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Column.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Generating C++ code from yocs_msgs/Column.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/Column.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/ColumnList.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Column.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/ColumnList.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Generating C++ code from yocs_msgs/ColumnList.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/ColumnList.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
@@ -176,57 +176,57 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Table.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Table.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Generating C++ code from yocs_msgs/Table.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/Table.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/TableList.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Table.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovariance.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Table.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/PoseWithCovarianceStamped.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TableList.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Generating C++ code from yocs_msgs/TableList.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/TableList.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Trajectory.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Trajectory.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Generating C++ code from yocs_msgs/Trajectory.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/Trajectory.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/TrajectoryList.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Trajectory.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/TrajectoryList.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Generating C++ code from yocs_msgs/TrajectoryList.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/TrajectoryList.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/Waypoint.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Generating C++ code from yocs_msgs/Waypoint.msg"
@@ -234,26 +234,26 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/WaypointList.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointList.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Generating C++ code from yocs_msgs/WaypointList.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/src/yocs_msgs/msg/WaypointList.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToAction.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToGoal.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionGoal.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToFeedback.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionGoal.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionResult.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionFeedback.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToAction.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Generating C++ code from yocs_msgs/NavigateToAction.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToAction.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
@@ -269,9 +269,9 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToResult.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionResult.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Generating C++ code from yocs_msgs/NavigateToActionResult.msg"
@@ -279,9 +279,9 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToActionFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/NavigateToFeedback.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/NavigateToActionFeedback.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Generating C++ code from yocs_msgs/NavigateToActionFeedback.msg"
@@ -307,14 +307,14 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorAction.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorResult.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionGoal.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionResult.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorResult.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionGoal.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorFeedback.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorGoal.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorAction.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Generating C++ code from yocs_msgs/DockingInteractorAction.msg"
@@ -331,9 +331,9 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorResult.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionResult.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Generating C++ code from yocs_msgs/DockingInteractorActionResult.msg"
@@ -341,9 +341,9 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorActionFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/DockingInteractorFeedback.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/DockingInteractorActionFeedback.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Generating C++ code from yocs_msgs/DockingInteractorActionFeedback.msg"
@@ -369,15 +369,15 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeAction.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionGoal.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeGoal.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeFeedback.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeResult.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionResult.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionFeedback.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionGoal.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeGoal.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeAction.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Generating C++ code from yocs_msgs/LocalizeAction.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeAction.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
@@ -385,17 +385,17 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionGoal.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeGoal.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionGoal.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Generating C++ code from yocs_msgs/LocalizeActionGoal.msg"
 	cd /home/nik/ROS_ws/src/yocs_msgs && /home/nik/ROS_ws/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionGoal.msg -Iyocs_msgs:/home/nik/ROS_ws/src/yocs_msgs/msg -Iyocs_msgs:/home/nik/ROS_ws/devel/share/yocs_msgs/msg -Iactionlib_msgs:/opt/ros/noetic/share/actionlib_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p yocs_msgs -o /home/nik/ROS_ws/devel/include/yocs_msgs -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeResult.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeResult.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionResult.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Generating C++ code from yocs_msgs/LocalizeActionResult.msg"
@@ -403,9 +403,9 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeActionFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeFeedback.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalStatus.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /home/nik/ROS_ws/devel/share/yocs_msgs/msg/LocalizeFeedback.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /opt/ros/noetic/share/actionlib_msgs/msg/GoalID.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/LocalizeActionFeedback.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Generating C++ code from yocs_msgs/LocalizeActionFeedback.msg"
@@ -431,12 +431,12 @@ yocs_msgs/CMakeFiles/yocs_msgs_generate_messages_cpp: /home/nik/ROS_ws/devel/inc
 
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /home/nik/ROS_ws/src/yocs_msgs/srv/WaypointListService.srv
-/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /home/nik/ROS_ws/src/yocs_msgs/msg/WaypointList.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
-/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/geometry_msgs/msg/Quaternion.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /home/nik/ROS_ws/src/yocs_msgs/msg/Waypoint.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/geometry_msgs/msg/Pose.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/std_msgs/msg/Header.msg
+/home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/gencpp/msg.h.template
 /home/nik/ROS_ws/devel/include/yocs_msgs/WaypointListService.h: /opt/ros/noetic/share/gencpp/srv.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/nik/ROS_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Generating C++ code from yocs_msgs/WaypointListService.srv"

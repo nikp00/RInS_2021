@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/nik/ROS_ws/build
 include yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TableList.dir/progress.make
 
 yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TableList:
-	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/src/yocs_msgs/msg/TableList.msg std_msgs/Header:yocs_msgs/Table:geometry_msgs/PoseWithCovariance:geometry_msgs/Pose:geometry_msgs/Point:geometry_msgs/Quaternion:geometry_msgs/PoseWithCovarianceStamped
+	cd /home/nik/ROS_ws/build/yocs_msgs && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py yocs_msgs /home/nik/ROS_ws/src/yocs_msgs/msg/TableList.msg geometry_msgs/PoseWithCovariance:yocs_msgs/Table:geometry_msgs/Quaternion:geometry_msgs/Pose:std_msgs/Header:geometry_msgs/PoseWithCovarianceStamped:geometry_msgs/Point
 
 _yocs_msgs_generate_messages_check_deps_TableList: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TableList
 _yocs_msgs_generate_messages_check_deps_TableList: yocs_msgs/CMakeFiles/_yocs_msgs_generate_messages_check_deps_TableList.dir/build.make

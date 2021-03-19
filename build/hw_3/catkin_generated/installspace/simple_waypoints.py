@@ -3,7 +3,6 @@
 
 import rospy
 import math
-import random
 import sys
 import json
 import tf
@@ -36,7 +35,7 @@ class SimpleWaypoints:
         self.waypoints = json.load(open(waypoints_file))
         self.current_pose = None
 
-        self.waypoint_status = 3
+        self.get_next_waypoint = True
         self.seq = 0
 
         self.waypoints_history = list()
@@ -46,15 +45,15 @@ class SimpleWaypoints:
     def run(self):
         r = rospy.Rate(1)
         while self.pose_publisher.get_num_connections() <= 0:
-            print(self.pose_publisher.get_num_connections())
             r.sleep()
+        print("Pose publisher ready.")
 
         while self.current_pose == None:
             r.sleep()
 
         while not rospy.is_shutdown() and len(self.waypoints) > 0:
-            if self.waypoint_status == 3:
-                self.waypoint_status = 0
+            if self.get_next_waypoint:
+                self.get_next_waypoint = False
                 self.send_next_waypoint()
             r.sleep()
 
@@ -118,6 +117,7 @@ class SimpleWaypoints:
     def send_next_waypoint(self):
         waypoint = self.find_nearest_waypoint()
         self.send_marker(self.seq, waypoint)
+        print(f"Navigating to waypoint: {waypoint}")
 
         msg = PoseStamped()
         msg.header.seq = self.seq
@@ -135,7 +135,6 @@ class SimpleWaypoints:
         )
 
         self.pose_publisher.publish(msg)
-        print(msg)
 
     def send_marker(
         self,
@@ -178,18 +177,26 @@ class SimpleWaypoints:
 
     def result_sub_callback(self, data):
         res_status = data.status.status
-        print(f"status: {res_status}")
+        self.get_next_waypoint = True
         if res_status == 3:
-            self.waypoint_status = 3
             self.send_marker(
                 self.seq,
                 self.waypoints_history[self.seq],
                 a=0.2,
                 action=Marker.MODIFY,
             )
-
+            print("Goal reached")
             self.seq += 1
-            print("Goal reached", res_status)
+        elif res_status == 5:
+            self.send_marker(
+                self.seq,
+                self.waypoints_history[self.seq],
+                a=0.2,
+                r=255,
+                action=Marker.MODIFY,
+            )
+            print("The requested waypoint could not be reached!")
+            self.seq += 1
 
     def current_pose_callback(self, data):
         self.current_pose = data.pose.pose
