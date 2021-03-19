@@ -1,8 +1,0 @@
-prefix=/home/nik/ROS_ws/install
-
-Name: yocs_math_toolkit
-Description: Description of yocs_math_toolkit
-Version: 0.12.1
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib -lyocs_math_toolkit
-Requires: ecl_build ecl_config ecl_exceptions ecl_formatters ecl_linear_algebra geometry_msgs roscpp tf
