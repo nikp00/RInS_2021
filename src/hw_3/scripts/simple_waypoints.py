@@ -33,6 +33,7 @@ class SimpleWaypoints:
         self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
 
         self.waypoints = json.load(open(waypoints_file))
+        self.n_waypoints = len(self.waypoints)
         self.current_pose = None
 
         self.get_next_waypoint = True
@@ -51,7 +52,7 @@ class SimpleWaypoints:
         while self.current_pose == None:
             r.sleep()
 
-        while not rospy.is_shutdown() and len(self.waypoints) > 0:
+        while not rospy.is_shutdown() and self.seq < self.n_waypoints:
             if self.get_next_waypoint:
                 self.get_next_waypoint = False
                 self.send_next_waypoint()
@@ -187,7 +188,7 @@ class SimpleWaypoints:
             )
             print("Goal reached")
             self.seq += 1
-        elif res_status == 5:
+        elif res_status in (5, 4):
             self.send_marker(
                 self.seq,
                 self.waypoints_history[self.seq],
