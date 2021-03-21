@@ -8,7 +8,6 @@ project(hw_3)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
   roscpp
   rospy
   std_msgs
@@ -105,7 +104,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES hw_1
-  CATKIN_DEPENDS message_runtime
+  # CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
