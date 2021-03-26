@@ -1,0 +1,4 @@
+<launch>
+    <node name="hardcoded_waypoints" pkg="task_1" type="hardcoded_waypoints.py" output="log" args="$(find task_1)/data/waypoints.json" />
+    <!-- <node name="mover" pkg="task_1" type="mover.py" output="screen" /> -->
+</launch>
