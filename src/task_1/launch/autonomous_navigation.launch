@@ -3,4 +3,6 @@
         <param name="segmentation_size" type="int" value="1" />
         <param name="min_quad_size" type="int" value="15" />
     </node>
+    <node name="mover" pkg="task_1" type="mover.py" output="log" />
+    <node name="face_detector" pkg="task_1" type="face_detector.py" output="screen" args="$(find task_1)/data/deploy.prototxt.txt $(find task_1)/data/res10_300x300_ssd_iter_140000.caffemodel" />
 </launch>

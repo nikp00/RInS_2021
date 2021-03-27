@@ -8,6 +8,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import PoseArray, PoseStamped, Point, Quaternion
 from move_base_msgs.msg import MoveBaseActionResult
 from nav_msgs.srv import GetPlan
+from actionlib_msgs.msg import GoalID
 
 
 class Mover:
@@ -19,9 +20,18 @@ class Mover:
         self.pose_publisher = rospy.Publisher(
             "/move_base_simple/goal", PoseStamped, queue_size=10
         )
+        self.cancel_goal_publisher = rospy.Publisher(
+            "/move_base/cancel", GoalID, queue_size=10
+        )
 
+        self.discovered_faces = 0
+        self.last_face = list()
         self.result_sub = rospy.Subscriber(
             "/move_base/result", MoveBaseActionResult, self.result_sub_callback
+        )
+
+        self.face_sub = rospy.Subscriber(
+            "/face_markers", MarkerArray, self.face_markers_sub_callbask
         )
 
         self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
@@ -37,9 +47,13 @@ class Mover:
         self.states = {
             0: "Get next waypoint",
             1: "Moving to waypoint",
-            2: "Speaking to face",
+            2: "Move to face",
+            3: "Moving to face",
+            4: "Speaking to face",
         }
         self.state = 0
+
+        self.stored_pose = None
 
         self.run()
 
@@ -50,32 +64,78 @@ class Mover:
 
         print("start", self.n_waypoints)
         while not rospy.is_shutdown():
+            if len(self.last_face) > 0:
+                self.state = 2
+
             self.waypoint_markers_publisher.publish(self.waypoint_markers)
             if self.seq < self.n_waypoints:
                 if self.state == 0:
                     self.state = 1
                     self.send_next_waypoint()
+                if self.state == 2:
+                    self.state = 3
+                    self.move_to_face()
 
-    def find_nearest_waypoint(self):
-        start_translation = None
-        while start_translation is None:
+    def move_to_face(self):
+        self.cancel_goal_publisher.publish(GoalID())
+        self.stored_pose = self.get_current_pose()
+
+        msg = PoseStamped()
+        msg.header.seq = self.seq
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = "map"
+
+        angle = tf.transformations.euler_from_quaternion(
+            [
+                self.last_face[0].pose.orientation.x,
+                self.last_face[0].pose.orientation.y,
+                self.last_face[0].pose.orientation.z,
+                self.last_face[0].pose.orientation.w,
+            ]
+        )[2]
+
+        print(angle)
+
+        d = 0.05 * 10
+        msg.pose.position = Point(
+            self.last_face[0].pose.position.x - d * math.cos(angle),
+            self.last_face[0].pose.position.y - d * math.sin(angle),
+            0,
+        )
+        msg.pose.orientation = self.stored_pose.pose.orientation
+
+        self.waypoint_markers.markers.append(
+            self.create_marker(self.seq + 95, msg.pose, b=255)
+        )
+
+        self.last_face = self.last_face[1:]
+
+        self.pose_publisher.publish(msg)
+
+    def get_current_pose(self):
+        pose_translation = None
+        while pose_translation is None:
             try:
-                start_translation = self.tf_buf.lookup_transform(
-                    "map", "odom", rospy.Time.now(), rospy.Duration(2)
+                pose_translation = self.tf_buf.lookup_transform(
+                    "map", "base_link", rospy.Time.now(), rospy.Duration(2)
                 )
             except Exception as e:
                 print(e)
 
-        start = PoseStamped()
-        start.header.seq = 0
-        start.header.stamp = rospy.Time.now()
-        start.header.frame_id = "map"
-        start.pose.position = Point(
-            start_translation.transform.translation.x,
-            start_translation.transform.translation.y,
+        pose = PoseStamped()
+        pose.header.seq = 0
+        pose.header.stamp = rospy.Time.now()
+        pose.header.frame_id = "map"
+        pose.pose.position = Point(
+            pose_translation.transform.translation.x,
+            pose_translation.transform.translation.y,
             0,
         )
-        start.pose.orientation = start_translation.transform.rotation
+        pose.pose.orientation = pose_translation.transform.rotation
+        return pose
+
+    def find_nearest_waypoint(self):
+        start = self.get_current_pose()
         min_len = 100000
 
         for e in self.waypoints.poses:
@@ -133,7 +193,8 @@ class Mover:
     def send_next_waypoint(self):
         waypoint = self.find_nearest_waypoint()
         self.waypoint_markers.markers.append(self.create_marker(self.seq, waypoint))
-        print(f"Navigating to waypoint: {waypoint}")
+        # print(f"Navigating to waypoint: {waypoint}")
+        print(f"Navigating to waypoint")
 
         msg = PoseStamped()
         msg.header.seq = self.seq
@@ -144,11 +205,6 @@ class Mover:
         msg.pose.orientation = waypoint.orientation
 
         self.pose_publisher.publish(msg)
-
-    def result_sub_callback(self, data):
-        if data.status.status == 3:
-            self.seq += 1
-            self.state = 0
 
     def create_marker(
         self,
@@ -187,6 +243,23 @@ class Mover:
         msg.lifetime = rospy.Duration(lifetime)
 
         return msg
+
+    def result_sub_callback(self, data):
+        print(data)
+        if self.state == 1:
+            if data.status.status == 3:
+                self.seq += 1
+                self.state = 0
+        elif self.state == 3:
+            if data.status.status == 3:
+                self.status = 4
+                print("Talk")
+
+    def face_markers_sub_callbask(self, data):
+        if self.discovered_faces < len(data.markers):
+            self.discovered_faces = len(data.markers)
+            self.last_face.append(data.markers[-1])
+            print("New Face", "Mover")
 
 
 if __name__ == "__main__":
