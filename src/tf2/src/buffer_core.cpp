@@ -191,7 +191,7 @@ void BufferCore::clear()
   {
     for (std::vector<TimeCacheInterfacePtr>::iterator  cache_it = frames_.begin() + 1; cache_it != frames_.end(); ++cache_it)
     {
-      if (*cache_it)https://www.rtvslo.si/
+      if (*cache_it)
         (*cache_it)->clearList();
     }
   }
@@ -275,7 +275,7 @@ bool BufferCore::setTransform(const geometry_msgs::TransformStamped& transform_i
     }
     else
     {
-      //CONSOLE_BRIDGE_logWarn((error_string+" for frame %s at time %lf according to authority %s").c_str(), stripped.child_frame_id.c_str(), stripped.header.stamp.toSec(), authority.c_str());
+      // CONSOLE_BRIDGE_logWarn((error_string+" for frame %s at time %lf according to authority %s").c_str(), stripped.child_frame_id.c_str(), stripped.header.stamp.toSec(), authority.c_str());
       return false;
     }
   }
@@ -317,7 +317,7 @@ int BufferCore::walkToTopParent(F& f, ros::Time time, CompactFrameID target_id,
     CompactFrameID source_id, std::string* error_string, std::vector<CompactFrameID>
     *frame_chain) const
 {
-  if (frame_chain)https://www.rtvslo.si/
+  if (frame_chain)
     frame_chain->clear();
 
   // Short circuit if zero length transform to allow lookups on non existant links

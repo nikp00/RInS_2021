@@ -8,7 +8,14 @@ import tf
 
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import PointStamped, Vector3, Pose, Quaternion
+from geometry_msgs.msg import (
+    PointStamped,
+    Vector3,
+    Pose,
+    Quaternion,
+    PoseStamped,
+    Point,
+)
 from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
@@ -30,6 +37,9 @@ class FaceDetectorDNN:
         # Object we use for transforming between coordinate frames
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
+
+        rospy.sleep(5)
+        print("Start")
 
     def get_pose(self, coords, dist, stamp):
         k_f = 554
@@ -56,12 +66,51 @@ class FaceDetectorDNN:
             pose.position.x = point_world.point.x
             pose.position.y = point_world.point.y
             pose.position.z = point_world.point.z
-            pose.orientation = Quaternion(
-                *list(tf.transformations.quaternion_from_euler(0, 0, angle_to_target))
-            )
         except Exception as e:
             print(e)
             pose = None
+
+        base_pose = self.get_current_pose(stamp)
+        angle = tf.transformations.euler_from_quaternion(
+            [
+                base_pose.pose.orientation.x,
+                base_pose.pose.orientation.y,
+                base_pose.pose.orientation.z,
+                base_pose.pose.orientation.w,
+            ]
+        )[2]
+
+        angle = np.arctan2(
+            base_pose.pose.position.y - pose.position.y,
+            base_pose.pose.position.x - pose.position.x,
+        )
+
+        pose.orientation = Quaternion(
+            *list(tf.transformations.quaternion_from_euler(0, 0, angle))
+        )
+
+        return pose
+
+    def get_current_pose(self, time):
+        pose_translation = None
+        while pose_translation is None:
+            try:
+                pose_translation = self.tf_buf.lookup_transform(
+                    "map", "base_link", time, rospy.Duration(2)
+                )
+            except Exception as e:
+                print(e)
+
+        pose = PoseStamped()
+        pose.header.seq = 0
+        pose.header.stamp = rospy.Time.now()
+        pose.header.frame_id = "map"
+        pose.pose.position = Point(
+            pose_translation.transform.translation.x,
+            pose_translation.transform.translation.y,
+            0,
+        )
+        pose.pose.orientation = pose_translation.transform.rotation
         return pose
 
     def find_faces(self):
@@ -105,6 +154,8 @@ class FaceDetectorDNN:
                 box = face_detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 box = box.astype("int")
                 x1, y1, x2, y2 = box[0], box[1], box[2], box[3]
+                if any(e < 0 for e in (x1, y1, x2, y2)):
+                    continue
 
                 # Extract region containing face
                 face_region = rgb_image[y1:y2, x1:x2]
@@ -148,11 +199,9 @@ class FaceDetectorDNN:
                             )
                             m.color = ColorRGBA(0, 1, 1, 1)
 
-                            print("Same face")
                             skip = True
                             break
                     if not skip:
-                        print("New face")
                         self.marker_num += 1
                         marker.color = ColorRGBA(0, 1, 0, 1)
                         marker.header.stamp = rospy.Time(0)

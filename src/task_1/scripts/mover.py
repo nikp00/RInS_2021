@@ -25,7 +25,25 @@ class Mover:
         )
 
         self.discovered_faces = 0
+        self.waypoint_markers = MarkerArray()
+        self.seq = 0
+        self.states = {
+            0: "Get next waypoint",
+            1: "Moving to waypoint",
+            2: "Move to face",
+            3: "Moving to face",
+            4: "Speaking to face",
+            5: "Return to last saved position",
+            6: "Returning to last saved position",
+        }
+        self.state = 0
         self.last_face = list()
+        self.stored_pose = None
+        self.last_waypoint = None
+
+        self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
+        self.n_waypoints = len(self.waypoints.poses)
+
         self.result_sub = rospy.Subscriber(
             "/move_base/result", MoveBaseActionResult, self.result_sub_callback
         )
@@ -39,22 +57,6 @@ class Mover:
         self.tf_buf = tf2_ros.Buffer()
         self.tf2_listener = tf2_ros.TransformListener(self.tf_buf)
 
-        self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
-
-        self.waypoint_markers = MarkerArray()
-        self.n_waypoints = len(self.waypoints.poses)
-        self.seq = 0
-        self.states = {
-            0: "Get next waypoint",
-            1: "Moving to waypoint",
-            2: "Move to face",
-            3: "Moving to face",
-            4: "Speaking to face",
-        }
-        self.state = 0
-
-        self.stored_pose = None
-
         self.run()
 
     def run(self):
@@ -62,19 +64,28 @@ class Mover:
         while self.pose_publisher.get_num_connections() < 1:
             r.sleep()
 
-        print("start", self.n_waypoints)
         while not rospy.is_shutdown():
-            if len(self.last_face) > 0:
+            if self.state not in (2, 3, 4, 5, 6) and len(self.last_face) > 0:
                 self.state = 2
 
             self.waypoint_markers_publisher.publish(self.waypoint_markers)
             if self.seq < self.n_waypoints:
                 if self.state == 0:
                     self.state = 1
+                    print(self.states[self.state])
                     self.send_next_waypoint()
                 if self.state == 2:
                     self.state = 3
+                    print(self.states[self.state])
+                    self.waypoints.poses.append(self.last_waypoint)
                     self.move_to_face()
+                if self.state == 4:
+                    self.state = 5
+                    print(self.states[self.state])
+                if self.state == 5:
+                    self.pose_publisher.publish(self.stored_pose)
+                    self.state = 6
+                    print(self.states[self.state])
 
     def move_to_face(self):
         self.cancel_goal_publisher.publish(GoalID())
@@ -94,12 +105,10 @@ class Mover:
             ]
         )[2]
 
-        print(angle)
-
         d = 0.05 * 10
         msg.pose.position = Point(
-            self.last_face[0].pose.position.x - d * math.cos(angle),
-            self.last_face[0].pose.position.y - d * math.sin(angle),
+            self.last_face[0].pose.position.x + d * math.cos(angle),
+            self.last_face[0].pose.position.y + d * math.sin(angle),
             0,
         )
         msg.pose.orientation = self.stored_pose.pose.orientation
@@ -180,6 +189,8 @@ class Mover:
         if True:
             waypoint.orientation = self.fix_angle(waypoint, start)
 
+        self.last_waypoint = waypoint
+
         self.waypoints.poses.remove(waypoint)
         return waypoint
 
@@ -193,8 +204,6 @@ class Mover:
     def send_next_waypoint(self):
         waypoint = self.find_nearest_waypoint()
         self.waypoint_markers.markers.append(self.create_marker(self.seq, waypoint))
-        # print(f"Navigating to waypoint: {waypoint}")
-        print(f"Navigating to waypoint")
 
         msg = PoseStamped()
         msg.header.seq = self.seq
@@ -203,7 +212,6 @@ class Mover:
 
         msg.pose.position = waypoint.position
         msg.pose.orientation = waypoint.orientation
-
         self.pose_publisher.publish(msg)
 
     def create_marker(
@@ -245,21 +253,24 @@ class Mover:
         return msg
 
     def result_sub_callback(self, data):
-        print(data)
-        if self.state == 1:
+        if self.state == 1:  # Moving to waypoint
             if data.status.status == 3:
                 self.seq += 1
                 self.state = 0
-        elif self.state == 3:
+                print(self.states[self.state])
+        elif self.state == 3:  # Moving to face
             if data.status.status == 3:
-                self.status = 4
-                print("Talk")
+                self.state = 4
+                print(self.states[self.state])
+        elif self.state == 6:  # Moving to stored pose
+            if data.status.status == 3:
+                self.state = 0
+                print(self.states[self.state])
 
     def face_markers_sub_callbask(self, data):
         if self.discovered_faces < len(data.markers):
             self.discovered_faces = len(data.markers)
             self.last_face.append(data.markers[-1])
-            print("New Face", "Mover")
 
 
 if __name__ == "__main__":

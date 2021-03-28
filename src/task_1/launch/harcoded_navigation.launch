@@ -1,5 +1,5 @@
 <launch>
     <node name="hardcoded_waypoints" pkg="task_1" type="hardcoded_waypoints.py" output="log" args="$(find task_1)/data/waypoints.json" />
     <node name="mover" pkg="task_1" type="mover.py" output="screen" />
-    <node name="face_detector" pkg="task_1" type="face_detector.py" output="screen" args="$(find task_1)/data/deploy.prototxt.txt $(find task_1)/data/res10_300x300_ssd_iter_140000.caffemodel" />
+    <node name="face_detector" pkg="task_1" type="face_detector.py" output="log" args="$(find task_1)/data/deploy.prototxt.txt $(find task_1)/data/res10_300x300_ssd_iter_140000.caffemodel" />
 </launch>

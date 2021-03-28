@@ -3,7 +3,15 @@ import numpy as np
 import random
 
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseArray, Pose, Point, Quaternion
+from geometry_msgs.msg import (
+    PoseArray,
+    Pose,
+    Point,
+    Quaternion,
+    TransformStamped,
+    PointStamped,
+)
+from tf2_geometry_msgs import do_transform_point
 from sensor_msgs.msg import Image
 
 
@@ -32,16 +40,17 @@ class MapSegmentation:
         self.occupancy_grid_to_img()
         self.create_grid()
         self.group_quadrants()
+        self.generate_waypoints()
         self.img_to_msg()
 
     def publish(self):
         n = self.waypoint_publisher.get_num_connections()
         if n > self.n_connections["waypoints"]:
             self.n_connections["waypoints"] = n
-            self.waypoint_publisher.publish(self.waypoints)
         else:
             self.n_connections["waypoints"] = n
 
+        self.waypoint_publisher.publish(self.waypoints)
         n = self.img_publisher.get_num_connections()
         if n > self.n_connections["img"]:
             self.n_connections["img"] = n
@@ -119,7 +128,7 @@ class MapSegmentation:
         map_transform.transform.translation.z = self.map_msg.info.origin.position.z
         map_transform.transform.rotation = self.map_msg.info.origin.orientation
 
-        for (y0, x0), (y1, x1) in self.group_quadrants:
+        for (y0, x0), (y1, x1) in self.grouped_quads:
             my = (
                 self.map_msg.info.height - (y0 + (y1 - y0) / 2)
             ) * self.map_msg.info.resolution
