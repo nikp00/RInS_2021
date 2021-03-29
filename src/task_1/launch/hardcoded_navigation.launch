@@ -1,16 +1,11 @@
 <launch>
-    <node name="map_segmentation" pkg="task_1" type="map_segmentation.py" output="screen">
-        <param name="segmentation_size" type="int" value="1" />
-        <param name="min_quad_size" type="int" value="10" />
-        <param name="waypoint_rotation_treshold" type="double" value="0.1" />
-    </node>
-
+    <node name="hardcoded_waypoints" pkg="task_1" type="hardcoded_waypoints.py" output="log" args="$(find task_1)/data/waypoints.json" />
     <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" output="log" />
     <node name="face_detector" pkg="task_1" type="face_detector.py" output="screen" args="$(find task_1)/data/deploy.prototxt.txt $(find task_1)/data/res10_300x300_ssd_iter_140000.caffemodel" />
     <node name="tts" pkg="task_1" type="tts.py" output="screen" args="$(find task_1)/data/ $(find task_1)/data/ris-2021-e782e57981e3.json"></node>
     <node name="mover" pkg="task_1" type="mover.py" output="screen">
-        <param name="number_of_faces" value="3" />
+        <param name="number_of_faces" value="5" />
         <param name="distance_to_face" value="10" />
-        <param name="hardcoded_waypoints" value="false" />
+        <param name="hardcoded_waypoints" value="true" />
     </node>
 </launch>

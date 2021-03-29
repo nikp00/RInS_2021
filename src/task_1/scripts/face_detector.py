@@ -89,6 +89,8 @@ class FaceDetectorDNN:
             base_pose.pose.position.x - pose.position.x,
         )
 
+        print((angle * 180) / np.pi)
+
         pose.orientation = Quaternion(
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )

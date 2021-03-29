@@ -10,6 +10,7 @@ project(task_1)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  message_generation
   std_msgs
   tf2
   geometry_msgs
@@ -51,18 +52,16 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+#Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+)
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   CustomTurtleMovement.srv
-# )
+add_service_files(
+  FILES
+  TextToSpeechService.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -72,10 +71,9 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -109,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES task_1
-  # CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
