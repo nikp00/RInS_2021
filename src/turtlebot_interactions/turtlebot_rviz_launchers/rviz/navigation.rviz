@@ -11,7 +11,7 @@ Panels:
         - /Local Map1/Trajectory Cloud1
         - /Camera1/Visibility1
         - /Marker1
-        - /MarkerArray2
+        - /Navigation waypoints1
       Splitter Ratio: 0.5
     Tree Height: 766
   - Class: rviz/Selection
@@ -507,6 +507,8 @@ Visualization Manager:
       Visibility:
         Amcl Particle Swarm: false
         Bumper Hit: false
+        Face markers: true
+        Face waypoints: true
         Full Plan: false
         Global Map:
           Costmap: true
@@ -523,7 +525,7 @@ Visualization Manager:
           Value: false
         Map: false
         Marker: true
-        MarkerArray: true
+        Navigation waypoints: true
         RobotModel: false
         TF: true
         Value: true
@@ -539,7 +541,7 @@ Visualization Manager:
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /face_markers
-      Name: MarkerArray
+      Name: Face markers
       Namespaces:
         "": true
       Queue Size: 100
@@ -547,7 +549,7 @@ Visualization Manager:
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /waypoint_markers
-      Name: MarkerArray
+      Name: Navigation waypoints
       Namespaces:
         waypoints: true
       Queue Size: 100
@@ -563,6 +565,14 @@ Visualization Manager:
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /face_waypoint_markers
+      Name: Face waypoints
+      Namespaces:
+        waypoints: true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:

@@ -34,6 +34,7 @@ class MapSegmentation:
 
         self.segmentation_size = rospy.get_param("~segmentation_size")
         self.min_quad_size = rospy.get_param("~min_quad_size")
+        self.waypoint_rotation_treshold = rospy.get_param("~waypoint_rotation_treshold")
 
         self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
 
@@ -142,6 +143,13 @@ class MapSegmentation:
 
             pose = Pose()
             pose.position = pt.point
+
+            # h = abs(y0 - y1)
+            # w = abs(x0 - x1)
+            # a = h * w
+            # if w >= self.min_quad_size * (1 + self.waypoint_rotation_treshold):
+            #     pose.orientation = Quaternion(1, 1, 1, 1)
+
             self.waypoints.poses.append(pose)
 
     def check_pure(self, y0, y1, x0, x1):

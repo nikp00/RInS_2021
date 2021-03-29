@@ -5,6 +5,8 @@ import numpy as np
 import tf2_geometry_msgs
 import tf2_ros
 import tf
+import face_recognition
+import copy
 
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
@@ -38,7 +40,9 @@ class FaceDetectorDNN:
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
-        rospy.sleep(5)
+        self.faces = list()
+
+        rospy.sleep(3)
         print("Start")
 
     def get_pose(self, coords, dist, stamp):
@@ -173,42 +177,110 @@ class FaceDetectorDNN:
                 # Find the location of the detected face
                 pose = self.get_pose((x1, x2, y1, y2), face_distance, depth_time)
                 if pose is not None:
-                    marker = Marker()
-                    marker.header.frame_id = "map"
-                    marker.type = Marker.CUBE
-                    marker.action = Marker.ADD
-                    marker.frame_locked = False
-                    marker.lifetime = rospy.Duration(0)
-                    marker.scale = Vector3(0.1, 0.1, 0.1)
-
+                    enc = face_recognition.face_encodings(rgb_image[y1:y2, x1:x2])
+                    if len(enc) == 0:
+                        continue
+                    enc = enc[0]
                     skip = False
-                    for m in self.marker_array.markers:
+                    for e in self.faces:
                         if (
                             np.sqrt(
-                                np.power(pose.position.x - m.pose.position.x, 2)
-                                + np.power(pose.position.y - m.pose.position.y, 2)
+                                np.power(pose.position.x - e.pose.position.x, 2)
+                                + np.power(pose.position.y - e.pose.position.y, 2)
                             )
                             < 0.5
+                            and face_recognition.compare_faces([e.enc], enc)[0]
                         ):
-                            m.action = Marker.MODIFY
-                            m.pose.position.x = float(
-                                (pose.position.x + m.pose.position.x) / 2
+                            # print(
+                            #     "same face",
+                            #     face_recognition.compare_faces([e.enc], enc),
+                            #     len(self.faces),
+                            # )
+                            e.pose.position.x = float(
+                                (pose.position.x + e.pose.position.x) / 2
                             )
-                            m.pose.position.y = float(
-                                (pose.position.y + m.pose.position.y) / 2
+                            e.pose.position.y = float(
+                                (pose.position.y + e.pose.position.y) / 2
                             )
-                            m.color = ColorRGBA(0, 1, 1, 1)
+                            e.color = ColorRGBA(0, 1, 1, 1)
 
                             skip = True
                             break
                     if not skip:
+                        # print(
+                        #     "New face",
+                        #     face_recognition.compare_faces(
+                        #         [e.enc for e in self.faces], enc
+                        #     ),
+                        # )
                         self.marker_num += 1
-                        marker.color = ColorRGBA(0, 1, 0, 1)
-                        marker.header.stamp = rospy.Time(0)
-                        marker.pose = pose
-                        marker.id = self.marker_num
-                        self.marker_array.markers.append(marker)
-                    self.markers_pub.publish(self.marker_array)
+                        self.faces.append(Face(pose, enc, self.marker_num))
+                        print(len(self.faces))
+
+        self.marker_array.markers = list()
+
+        for e in self.faces:
+            self.marker_array.markers.append(e.to_marker())
+
+        self.markers_pub.publish(self.marker_array)
+
+        # marker = Marker()
+        # marker.header.frame_id = "map"
+        # marker.type = Marker.CUBE
+        # marker.action = Marker.ADD
+        # marker.frame_locked = False
+        # marker.lifetime = rospy.Duration(0)
+        # marker.scale = Vector3(0.1, 0.1, 0.1)
+
+        # skip = False
+        # for m in self.marker_array.markers:
+        #     if (
+        #         np.sqrt(
+        #             np.power(pose.position.x - m.pose.position.x, 2)
+        #             + np.power(pose.position.y - m.pose.position.y, 2)
+        #         )
+        #         < 0.5
+        #     ):
+        #         m.action = Marker.MODIFY
+        #         m.pose.position.x = float(
+        #             (pose.position.x + m.pose.position.x) / 2
+        #         )
+        #         m.pose.position.y = float(
+        #             (pose.position.y + m.pose.position.y) / 2
+        #         )
+        #         m.color = ColorRGBA(0, 1, 1, 1)
+
+        #         skip = True
+        #         break
+        # if not skip:
+        #     self.marker_num += 1
+        #     marker.color = ColorRGBA(0, 1, 0, 1)
+        #     marker.header.stamp = rospy.Time(0)
+        #     marker.pose = pose
+        #     marker.id = self.marker_num
+        #     self.marker_array.markers.append(marker)
+        # self.markers_pub.publish(self.marker_array)
+
+
+class Face:
+    def __init__(self, pose, enc, mId):
+        self.pose = pose
+        self.enc = copy.deepcopy(enc)
+        self.color = ColorRGBA(0, 1, 0, 1)
+        self.id = mId
+
+    def to_marker(self):
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.type = Marker.CUBE
+        marker.action = Marker.ADD
+        marker.frame_locked = False
+        marker.lifetime = rospy.Duration(0)
+        marker.scale = Vector3(0.1, 0.1, 0.1)
+        marker.pose = self.pose
+        marker.color = self.color
+        marker.id = self.id
+        return marker
 
 
 if __name__ == "__main__":

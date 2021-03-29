@@ -5,7 +5,7 @@ import tf2_ros
 import tf
 
 from visualization_msgs.msg import Marker, MarkerArray
-from geometry_msgs.msg import PoseArray, PoseStamped, Point, Quaternion
+from geometry_msgs.msg import PoseArray, PoseStamped, Point, Quaternion, Pose
 from move_base_msgs.msg import MoveBaseActionResult
 from nav_msgs.srv import GetPlan
 from actionlib_msgs.msg import GoalID
@@ -17,6 +17,9 @@ class Mover:
         self.waypoint_markers_publisher = rospy.Publisher(
             "/waypoint_markers", MarkerArray, queue_size=10
         )
+        self.face_waypoint_markers_publisher = rospy.Publisher(
+            "/face_waypoint_markers", MarkerArray, queue_size=10
+        )
         self.pose_publisher = rospy.Publisher(
             "/move_base_simple/goal", PoseStamped, queue_size=10
         )
@@ -26,6 +29,8 @@ class Mover:
 
         self.discovered_faces = 0
         self.waypoint_markers = MarkerArray()
+        self.face_waypoint_markers = MarkerArray()
+        self.replay_waypoints = PoseArray()
         self.seq = 0
         self.states = {
             0: "Get next waypoint",
@@ -40,6 +45,7 @@ class Mover:
         self.last_face = list()
         self.stored_pose = None
         self.last_waypoint = None
+        self.replay = False
 
         self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
         self.n_waypoints = len(self.waypoints.poses)
@@ -69,30 +75,63 @@ class Mover:
                 self.state = 2
 
             self.waypoint_markers_publisher.publish(self.waypoint_markers)
-            if self.seq < self.n_waypoints:
+            self.face_waypoint_markers_publisher.publish(self.face_waypoint_markers)
+
+            if len(self.waypoints.poses) > 0 or self.replay_waypoints != None:
+
+                if not self.replay and len(self.waypoints.poses) == 0:
+                    self.replay = True
+                    self.waypoints.poses = self.replay_waypoints.poses[0:-1]
+                    self.replay_waypoints = None
+
                 if self.state == 0:
-                    self.state = 1
-                    print(self.states[self.state])
-                    self.send_next_waypoint()
+                    if not self.replay:
+                        # Get next waypoint and set state to moving to next waypoint
+                        self.state = 1
+                        next_waypoint = self.find_nearest_waypoint()
+                        self.last_waypoint = next_waypoint
+                        self.replay_waypoints.poses.append(next_waypoint)
+                        self.waypoints.poses.remove(next_waypoint)
+                        self.send_next_waypoint(next_waypoint)
+                        print(self.states[self.state])
+                    else:
+                        print("Replay")
+                        print(self.replay_waypoints, len(self.waypoints.poses))
+                        next_waypoint = self.waypoints.poses.pop()
+                        self.last_waypoint = next_waypoint
+                        current_pose = self.get_current_pose()
+                        next_waypoint.orientation = self.fix_angle(
+                            next_waypoint, current_pose
+                        )
+                        self.send_next_waypoint(next_waypoint)
+                        self.state = 1
+
                 if self.state == 2:
+                    # Add the current waypoint back to the target list and set state to moving to face
                     self.state = 3
-                    print(self.states[self.state])
                     self.waypoints.poses.append(self.last_waypoint)
                     self.move_to_face()
+                    print(self.states[self.state])
                 if self.state == 4:
+                    # Change state to return to last saved point
+                    rospy.sleep(2)
                     self.state = 5
                     print(self.states[self.state])
                 if self.state == 5:
+                    # Publish the last stored pose and set state to returning to last saved pose
                     self.pose_publisher.publish(self.stored_pose)
                     self.state = 6
                     print(self.states[self.state])
+            else:
+                print("DONE")
 
     def move_to_face(self):
         self.cancel_goal_publisher.publish(GoalID())
+        rospy.sleep(1)
         self.stored_pose = self.get_current_pose()
 
         msg = PoseStamped()
-        msg.header.seq = self.seq
+        msg.header.seq = len(self.face_waypoint_markers.markers)
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = "map"
 
@@ -113,15 +152,15 @@ class Mover:
         )
         msg.pose.orientation = self.stored_pose.pose.orientation
 
-        self.waypoint_markers.markers.append(
-            self.create_marker(self.seq + 95, msg.pose, b=255)
+        self.face_waypoint_markers.markers.append(
+            self.create_marker(len(self.face_waypoint_markers.markers), msg.pose, b=255)
         )
 
         self.last_face = self.last_face[1:]
 
         self.pose_publisher.publish(msg)
 
-    def get_current_pose(self):
+    def get_current_pose(self) -> PoseStamped:
         pose_translation = None
         while pose_translation is None:
             try:
@@ -143,7 +182,7 @@ class Mover:
         pose.pose.orientation = pose_translation.transform.rotation
         return pose
 
-    def find_nearest_waypoint(self):
+    def find_nearest_waypoint(self, fix_angle=True) -> Pose:
         start = self.get_current_pose()
         min_len = 100000
 
@@ -186,23 +225,29 @@ class Mover:
                 min_len = path_len
                 waypoint = e
 
-        if True:
-            waypoint.orientation = self.fix_angle(waypoint, start)
+        if fix_angle:
+            if waypoint.orientation.x == 1:
+                waypoint.orientation = self.fix_angle(waypoint, start, -1)
+                print("Reverse")
+            else:
+                waypoint.orientation = self.fix_angle(waypoint, start)
 
-        self.last_waypoint = waypoint
-
-        self.waypoints.poses.remove(waypoint)
         return waypoint
 
-    def fix_angle(self, pose, current_pose):
+    def fix_angle(
+        self, pose: Pose, current_pose: PoseStamped, direction=1
+    ) -> Quaternion:
         dx = pose.position.x - current_pose.pose.position.x
         dy = pose.position.y - current_pose.pose.position.y
         return Quaternion(
-            *list(tf.transformations.quaternion_from_euler(0, 0, math.atan2(dy, dx)))
+            *list(
+                tf.transformations.quaternion_from_euler(
+                    0, 0, direction * math.atan2(dy, dx)
+                )
+            )
         )
 
-    def send_next_waypoint(self):
-        waypoint = self.find_nearest_waypoint()
+    def send_next_waypoint(self, waypoint: Pose):
         self.waypoint_markers.markers.append(self.create_marker(self.seq, waypoint))
 
         msg = PoseStamped()
@@ -217,7 +262,7 @@ class Mover:
     def create_marker(
         self,
         id,
-        waypoint,
+        waypoint: Pose,
         sx=0.5,
         sy=0.5,
         r=0,
@@ -262,6 +307,8 @@ class Mover:
             if data.status.status == 3:
                 self.state = 4
                 print(self.states[self.state])
+            elif data.status.status == 4:
+                self.state = 5
         elif self.state == 6:  # Moving to stored pose
             if data.status.status == 3:
                 self.state = 0
