@@ -89,8 +89,6 @@ class FaceDetectorDNN:
             base_pose.pose.position.x - pose.position.x,
         )
 
-        print((angle * 180) / np.pi)
-
         pose.orientation = Quaternion(
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )
@@ -225,43 +223,6 @@ class FaceDetectorDNN:
             self.marker_array.markers.append(e.to_marker())
 
         self.markers_pub.publish(self.marker_array)
-
-        # marker = Marker()
-        # marker.header.frame_id = "map"
-        # marker.type = Marker.CUBE
-        # marker.action = Marker.ADD
-        # marker.frame_locked = False
-        # marker.lifetime = rospy.Duration(0)
-        # marker.scale = Vector3(0.1, 0.1, 0.1)
-
-        # skip = False
-        # for m in self.marker_array.markers:
-        #     if (
-        #         np.sqrt(
-        #             np.power(pose.position.x - m.pose.position.x, 2)
-        #             + np.power(pose.position.y - m.pose.position.y, 2)
-        #         )
-        #         < 0.5
-        #     ):
-        #         m.action = Marker.MODIFY
-        #         m.pose.position.x = float(
-        #             (pose.position.x + m.pose.position.x) / 2
-        #         )
-        #         m.pose.position.y = float(
-        #             (pose.position.y + m.pose.position.y) / 2
-        #         )
-        #         m.color = ColorRGBA(0, 1, 1, 1)
-
-        #         skip = True
-        #         break
-        # if not skip:
-        #     self.marker_num += 1
-        #     marker.color = ColorRGBA(0, 1, 0, 1)
-        #     marker.header.stamp = rospy.Time(0)
-        #     marker.pose = pose
-        #     marker.id = self.marker_num
-        #     self.marker_array.markers.append(marker)
-        # self.markers_pub.publish(self.marker_array)
 
 
 class Face:

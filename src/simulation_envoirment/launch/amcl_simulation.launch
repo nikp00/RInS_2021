@@ -15,5 +15,9 @@
   </include>
 
   <!-- Move base -->
-  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml" />
+  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml">
+    <param name="move_base/DWAPlannerROS/max_rot_vel" value="0.5" />
+    <param name="move_base/DWAPlannerROS/acc_lim_theta" value="10.0" />
+    <param name="recovery_alpha_fast" value="10.0" />
+  </include>
 </launch>

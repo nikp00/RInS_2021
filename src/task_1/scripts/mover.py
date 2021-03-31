@@ -5,7 +5,7 @@ import tf2_ros
 import tf
 
 from visualization_msgs.msg import Marker, MarkerArray
-from geometry_msgs.msg import PoseArray, PoseStamped, Point, Quaternion, Pose
+from geometry_msgs.msg import PoseArray, PoseStamped, Point, Quaternion, Pose, Twist
 from move_base_msgs.msg import MoveBaseActionResult
 from nav_msgs.srv import GetPlan
 from actionlib_msgs.msg import GoalID
@@ -27,15 +27,20 @@ class Mover:
         self.cancel_goal_publisher = rospy.Publisher(
             "/move_base/cancel", GoalID, queue_size=10
         )
+        self.rotation_publisher = rospy.Publisher(
+            "/cmd_vel_mux/input/teleop", Twist, queue_size=10
+        )
 
         rospy.wait_for_service("text_to_speech")
         self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
 
         self.discovered_faces = 0
+        self.n_discovered_faces = 0
         self.waypoint_markers = MarkerArray()
         self.face_waypoint_markers = MarkerArray()
         self.replay_waypoints = PoseArray()
         self.seq = 0
+
         self.states = {
             0: "Get next waypoint",
             1: "Moving to waypoint",
@@ -44,9 +49,14 @@ class Mover:
             4: "Speaking to face",
             5: "Return to last saved position",
             6: "Returning to last saved position",
-            7: "Finished",
+            7: "Rotate",
+            8: "Rotating",
+            9: "Finished",
+            10: "Finished, unsuccessfully",
+            11: "End",
         }
 
+        self.rotation_state = -1
         self.state = 0
         self.last_face = list()
         self.stored_pose = None
@@ -65,7 +75,7 @@ class Mover:
         )
 
         self.face_sub = rospy.Subscriber(
-            "/face_markers", MarkerArray, self.face_markers_sub_callbask
+            "/face_markers", MarkerArray, self.face_markers_sub_callback
         )
 
         self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
@@ -101,7 +111,7 @@ class Mover:
             if self.state == 0:
                 # Found all faces
                 if self.number_of_faces == self.discovered_faces:
-                    self.state = 7
+                    self.state = 9
                 # Not all waypoints used, send the next nearest waypoint
                 elif not self.replay:
                     self.state = 1
@@ -119,18 +129,23 @@ class Mover:
                     print(self.states[self.state])
                 # All waypoints used, all faces not found, replay all the waypoints in the reverse oreder
                 elif self.replay and len(self.waypoints.poses) > 0:
-                    print("Replay")
-                    print(self.replay_waypoints, len(self.waypoints.poses))
-                    next_waypoint = self.waypoints.poses.pop()
-                    self.last_waypoint = next_waypoint
-                    current_pose = self.get_current_pose()
-                    next_waypoint.orientation = self.fix_angle(
-                        next_waypoint, current_pose
-                    )
-                    self.send_next_waypoint(next_waypoint)
-                    self.state = 1
+                    if self.rotation_state == -1:
+                        self.rotation_state = 0
+                        self.state = 7
+                    else:
+                        self.rotation_state = -1
+                        print("Replay")
+                        print(self.replay_waypoints, len(self.waypoints.poses))
+                        next_waypoint = self.waypoints.poses.pop()
+                        self.last_waypoint = next_waypoint
+                        current_pose = self.get_current_pose()
+                        next_waypoint.orientation = self.fix_angle(
+                            next_waypoint, current_pose
+                        )
+                        self.send_next_waypoint(next_waypoint)
+                        self.state = 1
                 else:
-                    self.state = 8
+                    self.state = 10
             # state: Move to face
             elif self.state == 2:
                 # Add the current waypoint back to the target list and set state to moving to face
@@ -143,8 +158,9 @@ class Mover:
             elif self.state == 4:
                 # Change state to return to last saved point
                 self.state = 5
+                self.n_discovered_faces += 1
                 self.speak(
-                    f"Hello, i will call you face number {self.discovered_faces}"
+                    f"Hello, i will call you face number {self.n_discovered_faces}"
                 )
                 rospy.sleep(3)
                 print(self.states[self.state])
@@ -154,20 +170,23 @@ class Mover:
                 self.pose_publisher.publish(self.stored_pose)
                 self.state = 6
                 print(self.states[self.state])
-            # state: Found all faces
             elif self.state == 7:
+                self.state = 8
+                self.rotate()
+            # state: Found all faces
+            elif self.state == 9:
                 self.speak(f"I found all {self.number_of_faces} faces, returning home")
                 self.send_next_waypoint(self.starting_pose.pose)
-                self.state = 9
+                self.state = 11
             # state: No waypoints remaining, didn't find all faces"
-            elif self.state == 8:
+            elif self.state == 10:
                 self.speak(
                     f"I found {self.discovered_faces} out of {self.number_of_faces} faces, returning home."
                 )
                 self.send_next_waypoint(self.starting_pose.pose)
-                self.state = 9
+                self.state = 11
             # state: Finished
-            elif self.state == 9:
+            elif self.state == 11:
                 print("Finished")
 
     def move_to_face(self):
@@ -198,7 +217,9 @@ class Mover:
             self.last_face[0].pose.position.y + d * math.sin(angle),
             0,
         )
-        msg.pose.orientation = self.stored_pose.pose.orientation
+
+        # msg.pose.orientation = self.stored_pose.pose.orientation
+        msg.pose.orientation = self.fix_angle(self.last_face[0].pose, msg)
 
         self.face_waypoint_markers.markers.append(
             self.create_marker(len(self.face_waypoint_markers.markers), msg.pose, b=255)
@@ -337,10 +358,35 @@ class Mover:
 
         return msg
 
+    def rotate(self):
+        print("Rotateeeeeee", self.rotation_state)
+
+        if self.rotation_state == 0:
+            self.stored_pose = self.get_current_pose()
+            print("Stored pose")
+
+        self.rotation_state += 1
+        c_pose = self.get_current_pose()
+        rz = tf.transformations.euler_from_quaternion(
+            [
+                c_pose.pose.orientation.x,
+                c_pose.pose.orientation.y,
+                c_pose.pose.orientation.z,
+                c_pose.pose.orientation.w,
+            ]
+        )[2]
+        rz += math.pi / 2
+        c_pose.pose.orientation = Quaternion(
+            *list(tf.transformations.quaternion_from_euler(0, 0, rz))
+        )
+        print(self.rotation_state, rz)
+        self.pose_publisher.publish(c_pose)
+
+        print(self.state, self.replay, len(self.waypoints.poses))
+
     def result_sub_callback(self, data):
 
         # State machine
-
         # state: Moving to waypoint
         if self.state == 1:
             if data.status.status == 3:
@@ -349,6 +395,10 @@ class Mover:
                 self.seq += 1
                 self.state = 0
                 print(self.states[self.state])
+            elif data.status.status == 4:
+                self.seq += 1
+                self.state = 0
+                print("Goal cant be reached")
         # state: Moving to face
         elif self.state == 3:
             if data.status.status == 3:
@@ -364,8 +414,21 @@ class Mover:
                 """Saved position reached successfully, change state to Get next waypoint"""
                 self.state = 0
                 print(self.states[self.state])
+        elif self.state == 8:
+            if data.status.status == 3:
+                if self.rotation_state < 3:
+                    self.state = 7
+                    print("Next rotation")
+                else:
+                    print("Resume movement")
+                    self.state = 0
+                    self.rotation_state = 0
+            else:
+                print("Resume movement")
+                self.state = 0
+                self.rotation_state = 0
 
-    def face_markers_sub_callbask(self, data):
+    def face_markers_sub_callback(self, data):
         if self.discovered_faces < len(data.markers):
             self.discovered_faces = len(data.markers)
             self.last_face.append(data.markers[-1])
