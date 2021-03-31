@@ -11,6 +11,6 @@
     <node name="mover" pkg="task_1" type="mover.py" output="screen">
         <param name="number_of_faces" value="3" />
         <param name="distance_to_face" value="10" />
-        <param name="hardcoded_waypoints" value="false" />
+        <param name="enable_rotation" value="false" />
     </node>
 </launch>

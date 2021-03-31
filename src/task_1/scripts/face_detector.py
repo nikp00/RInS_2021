@@ -164,10 +164,6 @@ class FaceDetectorDNN:
                 # Extract region containing face
                 face_region = rgb_image[y1:y2, x1:x2]
 
-                # Visualize the extracted face
-                # cv2.imshow("ImWindow", face_region)
-                # cv2.waitKey(1)
-
                 # Find the distance to the detected face
                 face_distance = float(np.nanmean(depth_image[y1:y2, x1:x2]))
 
@@ -191,11 +187,6 @@ class FaceDetectorDNN:
                             < 0.5
                             and face_recognition.compare_faces([e.enc], enc)[0]
                         ):
-                            # print(
-                            #     "same face",
-                            #     face_recognition.compare_faces([e.enc], enc),
-                            #     len(self.faces),
-                            # )
                             e.pose.position.x = float(
                                 (pose.position.x + e.pose.position.x) / 2
                             )
@@ -207,12 +198,6 @@ class FaceDetectorDNN:
                             skip = True
                             break
                     if not skip:
-                        # print(
-                        #     "New face",
-                        #     face_recognition.compare_faces(
-                        #         [e.enc for e in self.faces], enc
-                        #     ),
-                        # )
                         self.marker_num += 1
                         self.faces.append(Face(pose, enc, self.marker_num))
                         print(len(self.faces))

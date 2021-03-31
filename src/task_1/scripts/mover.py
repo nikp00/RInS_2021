@@ -66,6 +66,7 @@ class Mover:
         self.number_of_faces = rospy.get_param("~number_of_faces")
         self.distance_to_face = rospy.get_param("~distance_to_face")
         self.hardcoded_waypoints = rospy.get_param("~hardcoded_waypoints")
+        self.enable_rotation = rospy.get_param("~enable_rotation")
         self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
 
         self.n_waypoints = len(self.waypoints.poses)
@@ -105,6 +106,17 @@ class Mover:
                 self.replay = True
                 self.waypoints.poses = self.replay_waypoints.poses[0:-1]
                 self.replay_waypoints = None
+                if self.enable_rotation:
+                    self.speak(
+                        "I haven't found all the faces yet but there are no remaining waypoints."
+                        + "I will replay all the waypoints in reverse and do a full rotation on every one to maximize my chances to find all the faces."
+                    )
+                else:
+                    self.speak(
+                        "I haven't found all the faces yet but there are no remaining waypoints."
+                        + "I will replay all the waypoints in reverse to try and find all the faces."
+                    )
+                print("Replay waypoints in reverse order")
 
             # State machine
             # state: Get next waypoint
@@ -115,26 +127,21 @@ class Mover:
                 # Not all waypoints used, send the next nearest waypoint
                 elif not self.replay:
                     self.state = 1
-
-                    if not self.hardcoded_waypoints:
-                        next_waypoint = self.find_nearest_waypoint()
-                    else:
-                        next_waypoint = self.waypoints.poses[0]
-                        self.waypoints.poses = self.waypoints.poses[1:]
-
+                    next_waypoint = self.find_nearest_waypoint()
                     self.last_waypoint = next_waypoint
                     self.replay_waypoints.poses.append(next_waypoint)
                     self.waypoints.poses.remove(next_waypoint)
                     self.send_next_waypoint(next_waypoint)
                     print(self.states[self.state])
+
                 # All waypoints used, all faces not found, replay all the waypoints in the reverse oreder
                 elif self.replay and len(self.waypoints.poses) > 0:
-                    if self.rotation_state == -1:
+                    # Rotation is enabled and robot moved to a new waypoint
+                    if self.enable_rotation and self.rotation_state == -1:
                         self.rotation_state = 0
                         self.state = 7
                     else:
                         self.rotation_state = -1
-                        print("Replay")
                         print(self.replay_waypoints, len(self.waypoints.poses))
                         next_waypoint = self.waypoints.poses.pop()
                         self.last_waypoint = next_waypoint
@@ -175,13 +182,13 @@ class Mover:
                 self.rotate()
             # state: Found all faces
             elif self.state == 9:
-                self.speak(f"I found all {self.number_of_faces} faces, returning home")
+                self.speak(f"I found all {self.number_of_faces} faces. Returning home")
                 self.send_next_waypoint(self.starting_pose.pose)
                 self.state = 11
             # state: No waypoints remaining, didn't find all faces"
             elif self.state == 10:
                 self.speak(
-                    f"I found {self.discovered_faces} out of {self.number_of_faces} faces, returning home."
+                    f"I found {self.discovered_faces} out of {self.number_of_faces} faces. Returning home."
                 )
                 self.send_next_waypoint(self.starting_pose.pose)
                 self.state = 11
