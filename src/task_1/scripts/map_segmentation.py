@@ -34,7 +34,6 @@ class MapSegmentation:
 
         self.segmentation_size = rospy.get_param("~segmentation_size")
         self.min_quad_size = rospy.get_param("~min_quad_size")
-        self.waypoint_rotation_treshold = rospy.get_param("~waypoint_rotation_treshold")
 
         self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
 

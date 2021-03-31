@@ -142,7 +142,7 @@ class Mover:
                         self.state = 7
                     else:
                         self.rotation_state = -1
-                        print(self.replay_waypoints, len(self.waypoints.poses))
+                        print("Remaining waypoints: ", len(self.waypoints.poses))
                         next_waypoint = self.waypoints.poses.pop()
                         self.last_waypoint = next_waypoint
                         current_pose = self.get_current_pose()
@@ -366,8 +366,6 @@ class Mover:
         return msg
 
     def rotate(self):
-        print("Rotateeeeeee", self.rotation_state)
-
         if self.rotation_state == 0:
             self.stored_pose = self.get_current_pose()
             print("Stored pose")
@@ -388,8 +386,6 @@ class Mover:
         )
         print(self.rotation_state, rz)
         self.pose_publisher.publish(c_pose)
-
-        print(self.state, self.replay, len(self.waypoints.poses))
 
     def result_sub_callback(self, data):
 

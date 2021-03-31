@@ -162,8 +162,6 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/test.py
-  scripts/hardcoded_waypoints.py
   scripts/mover.py
   scripts/face_detector.py
   scripts/map_segmentation.py

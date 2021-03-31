@@ -2,7 +2,6 @@
     <node name="map_segmentation" pkg="task_1" type="map_segmentation.py" output="screen">
         <param name="segmentation_size" type="int" value="1" />
         <param name="min_quad_size" type="int" value="15" />
-        <param name="waypoint_rotation_treshold" type="double" value="0.1" />
     </node>
 
     <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" output="log" />
