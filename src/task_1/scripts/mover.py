@@ -65,7 +65,6 @@ class Mover:
         self.starting_pose = None
         self.number_of_faces = rospy.get_param("~number_of_faces")
         self.distance_to_face = rospy.get_param("~distance_to_face")
-        self.hardcoded_waypoints = rospy.get_param("~hardcoded_waypoints")
         self.enable_rotation = rospy.get_param("~enable_rotation")
         self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
 
