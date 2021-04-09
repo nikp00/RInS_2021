@@ -111,6 +111,9 @@ class SimpleWaypoints:
                 min_len = path_len
                 waypoint = e
 
+        dx = waypoint["position"][0] - self.current_pose.position.x
+        dy = waypoint["position"][1] - self.current_pose.position.y
+        waypoint["orientation"] = [0, 0, math.atan2(dy, dx)]
         self.waypoints_history.append(waypoint)
         self.waypoints.remove(waypoint)
         return waypoint
