@@ -207,6 +207,8 @@ catkin_install_python(PROGRAMS
   scripts/map_segmentation.py
   scripts/tts.py
   scripts/cylinder_handler.py
+  scripts/capture_train_img.py
+  scripts/ring_segmentation.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

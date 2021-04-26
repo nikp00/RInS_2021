@@ -6,11 +6,7 @@
 
     <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" output="log" />
     <node name="tts" pkg="task_2" type="tts.py" output="log" args="$(find task_1)/data/ $(find task_1)/data/ris-2021-e782e57981e3.json"></node>
-    <!-- <node name="mover" pkg="task_1" type="mover.py" output="screen">
-        <param name="number_of_faces" value="3" />
-        <param name="distance_to_face" value="10" />
-        <param name="enable_rotation" value="false" />
-    </node> -->
+    <node name="mover" pkg="task_1" type="mover.py" output="screen" />
     <node name="cylinder_segmentation" pkg="task_2" type="cylinder_segmentation" output="log">
         <remap from="input" to="/camera/depth/points" />
     </node>

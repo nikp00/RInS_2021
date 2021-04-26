@@ -24,6 +24,8 @@ ros::Publisher cylinder_pose_publisher;
 
 tf2_ros::Buffer tf2_buffer;
 
+double min_z, max_z, min_y, max_y;
+
 typedef pcl::PointXYZ PointT;
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
@@ -55,12 +57,12 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
     // Build a passthrough filter to remove spurious NaNs
     pass.setInputCloud(cloud);
     pass.setFilterFieldName("y");
-    pass.setFilterLimits(-0.3, 0.09);
+    pass.setFilterLimits(min_y, max_y);
     pass.filter(*cloud_filtered);
 
     pass.setInputCloud(cloud_filtered);
     pass.setFilterFieldName("z");
-    pass.setFilterLimits(0.2, 2.0);
+    pass.setFilterLimits(min_z, max_z);
     pass.filter(*cloud_filtered);
 
     // Estimate point normals
@@ -197,6 +199,10 @@ int main(int argc, char **argv)
     // For transforming between coordinate frames
     tf2_ros::TransformListener tf2_listener(tf2_buffer);
 
+    nh.param<double>("min_y", min_y, -0.3);
+    nh.param<double>("max_y", max_y, 0.09);
+    nh.param<double>("min_z", min_z, 0.2);
+    nh.param<double>("max_z", max_z, 2.0);
     // Create a ROS subscriber for the input point cloud
     ros::Subscriber sub = nh.subscribe("input", 1, cloud_cb);
 

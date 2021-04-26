@@ -1,0 +1,3 @@
+<launch>
+    <node name="ring_segmentation" pkg="task_2" type="ring_segmentation.py" output="screen" />
+</launch>
