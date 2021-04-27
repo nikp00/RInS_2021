@@ -1,6 +1,18 @@
 import rospy
 from visualization_msgs.msg import MarkerArray, Marker
-from geometry_msgs.msg import PointStamped, PoseStamped, Pose, Quaternion
+from geometry_msgs.msg import (
+    PointStamped,
+    Point,
+    PoseStamped,
+    Pose,
+    Quaternion,
+    PoseArray,
+)
+from std_msgs.msg import ColorRGBA, Header
+import copy
+
+import tf2_geometry_msgs
+import tf2_ros
 import tf
 
 import numpy as np
@@ -12,11 +24,20 @@ class CylinderHandler:
 
         self.distance_threshold = 0.2
 
-        self.markers = MarkerArray()
+        self.cylinders = list()
         self.seq = 0
+
+        self.tf_buf = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
         self.cylinder_marker_publisher = rospy.Publisher(
             "cylinder_markers", MarkerArray, queue_size=10
+        )
+        self.n_detections_marker_publisher = rospy.Publisher(
+            "cylinder_n_detections_markers", MarkerArray, queue_size=10
+        )
+        self.cylinder_pose_publisher = rospy.Publisher(
+            "cylinder_pose", PoseArray, queue_size=10
         )
 
         self.pose_subscriber = rospy.Subscriber(
@@ -25,60 +46,91 @@ class CylinderHandler:
 
         rospy.spin()
 
+    def get_current_pose(self, time) -> Pose:
+        pose_translation = None
+        while pose_translation is None:
+            try:
+                pose_translation = self.tf_buf.lookup_transform(
+                    "map", "base_link", time, rospy.Duration(2)
+                )
+            except Exception as e:
+                print(e)
+
+        pose = PoseStamped()
+        pose.header.seq = 0
+        pose.header.stamp = rospy.Time.now()
+        pose.header.frame_id = "map"
+        pose.pose.position = Point(
+            pose_translation.transform.translation.x,
+            pose_translation.transform.translation.y,
+            0,
+        )
+        pose.pose.orientation = pose_translation.transform.rotation
+        return pose.pose
+
     def cylinder_callback(self, data: PointStamped):
-        print("-------------------------")
-        print(data.point)
-        cylinder = PoseStamped()
-        cylinder.pose.position = data.point
-        cylinder.pose.orientation = Quaternion(0, 0, 0, 1)
+        base_pose = self.get_current_pose(data.header.stamp)
+        angle = tf.transformations.euler_from_quaternion(
+            [
+                base_pose.orientation.x,
+                base_pose.orientation.y,
+                base_pose.orientation.z,
+                base_pose.orientation.w,
+            ]
+        )[2]
+
+        angle = np.arctan2(
+            base_pose.position.y - data.point.y,
+            base_pose.position.x - data.point.x,
+        )
+
+        pose = PoseStamped()
+        pose.pose.position = data.point
+        pose.pose.orientation = Quaternion(
+            *list(tf.transformations.quaternion_from_euler(0, 0, angle))
+        )
+
+        if np.isnan(pose.pose.position.x):
+            return
+
+        pose.pose.position.z = 0
+        print(pose)
 
         skip = False
-        for m in self.markers.markers:
+        for e in self.cylinders:
             if (
                 np.sqrt(
-                    np.power(cylinder.pose.position.x - m.pose.position.x, 2)
-                    + np.power(cylinder.pose.position.y - m.pose.position.y, 2)
+                    np.power(pose.pose.position.x - e.pose.pose.position.x, 2)
+                    + np.power(pose.pose.position.y - e.pose.pose.position.y, 2)
                 )
                 < 0.5
             ):
-                m.pose.position.x = float(
-                    (m.pose.position.x + cylinder.pose.position.x) / 2
+                e.pose.pose.position.x = float(
+                    (e.pose.pose.position.x + pose.pose.position.x) / 2
                 )
-                m.pose.position.y = float(
-                    (m.pose.position.y + cylinder.pose.position.y) / 2
+                e.pose.pose.position.y = float(
+                    (e.pose.pose.position.y + pose.pose.position.y) / 2
                 )
-                m.pose.position.z = float(
-                    (m.pose.position.z + cylinder.pose.position.z) / 2
+                e.pose.pose.position.z = float(
+                    (e.pose.pose.position.z + pose.pose.position.z) / 2
                 )
 
-                m.color.r += 10
+                e.n_detections += 1
                 skip = True
-                print(
-                    np.sqrt(
-                        np.power(cylinder.pose.position.x - m.pose.position.x, 2)
-                        + np.power(cylinder.pose.position.y - m.pose.position.y, 2)
-                    )
-                )
                 break
 
         if not skip:
-            print("Got new cylinder")
-            self.markers.markers.append(
-                self.create_marker(
-                    self.seq,
-                    cylinder.pose,
-                    ns="cylinder_marker",
-                    frame_id=data.header.frame_id,
-                    mType=Marker.CYLINDER,
-                    sx=0.1,
-                    sy=0.1,
-                    sz=0.1,
-                    g=255,
-                )
-            )
+            cylinder = Cylinder(pose, "yellow", self.seq)
             self.seq += 1
+            self.cylinders.append(cylinder)
 
-        self.cylinder_marker_publisher.publish(self.markers)
+        self.cylinder_marker_publisher.publish([e.to_marker() for e in self.cylinders])
+        self.n_detections_marker_publisher.publish(
+            [e.to_text() for e in self.cylinders]
+        )
+        self.cylinder_pose_publisher.publish(
+            PoseArray(Header(), [e.pose.pose for e in self.cylinders])
+        )
 
     def create_marker(
         self,
@@ -122,6 +174,56 @@ class CylinderHandler:
 
         m.text = text
 
+        return m
+
+
+class Cylinder:
+    colors = {
+        "yellow": (255, 255, 0),
+    }
+
+    def __init__(self, pose: PoseStamped, color: str, id: int):
+        self.pose = pose
+        self.color = Cylinder.colors["yellow"]  # color
+        self.id = id
+        self.n_detections = 1
+
+    def to_marker(self):
+        m = Marker()
+        m.header.frame_id = "map"
+        m.header.stamp = rospy.Time.now()
+
+        m.id = self.id
+        m.ns = "cylinder_marker"
+        m.type = Marker.CYLINDER
+        m.action = Marker.ADD
+        m.pose = copy.deepcopy(self.pose.pose)
+        m.pose.position.z = 0.2
+        m.scale.x = 0.3
+        m.scale.y = 0.3
+        m.scale.z = 0.3
+        m.color = ColorRGBA(*self.color, 1)
+        m.lifetime = rospy.Duration(0)
+        return m
+
+    def to_text(self):
+        m = Marker()
+        m.header.frame_id = "map"
+        m.header.stamp = rospy.Time.now()
+
+        m.id = self.id
+        m.ns = "cylinder_n_detections_markers"
+        m.type = Marker.TEXT_VIEW_FACING
+        m.action = Marker.ADD
+        m.pose = copy.deepcopy(self.pose.pose)
+        m.pose.position.z = 1
+        m.scale.x = 0.3
+        m.scale.y = 0.3
+        m.scale.z = 0.3
+        m.color = ColorRGBA(0, 0, 0, 1)
+        m.lifetime = rospy.Duration(0)
+
+        m.text = str(self.n_detections)
         return m
 
 

@@ -209,6 +209,7 @@ catkin_install_python(PROGRAMS
   scripts/cylinder_handler.py
   scripts/capture_train_img.py
   scripts/ring_segmentation.py
+  scripts/move_arm.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
