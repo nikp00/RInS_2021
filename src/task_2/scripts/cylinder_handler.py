@@ -25,7 +25,7 @@ class CylinderHandler:
         self.distance_threshold = 0.2
 
         self.cylinders = list()
-        self.seq = 0
+        self.seq = 1
 
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)

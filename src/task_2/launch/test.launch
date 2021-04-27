@@ -19,5 +19,5 @@
     <!-- <node name="ring_segmentation" pkg="task_2" type="ring_segmentation.py" output="screen" /> -->
 
 
-    <!-- <node name="move_arm" pkg="task_2" type="move_arm.py" output="log" /> -->
+    <node name="move_arm" pkg="task_2" type="move_arm.py" output="log" />
 </launch>

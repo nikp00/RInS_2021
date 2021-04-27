@@ -45,7 +45,7 @@ class Arm_Mover:
         ]
         self.extend.points = [
             JointTrajectoryPoint(
-                positions=[0.4, 1.55, 0.1, 0], time_from_start=rospy.Duration(1)
+                positions=[0.3, 1.55, 0.1, 0], time_from_start=rospy.Duration(1)
             )
         ]
 
