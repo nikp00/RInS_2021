@@ -1,0 +1,4 @@
+sensor_msgs/Image image
+uint32[] bounding_box
+---
+string color
