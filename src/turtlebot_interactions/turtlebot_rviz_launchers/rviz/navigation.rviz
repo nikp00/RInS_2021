@@ -10,8 +10,6 @@ Panels:
         - /Local Map1/Planner1
         - /Local Map1/Trajectory Cloud1
         - /Camera1/Visibility1
-        - /Marker1
-        - /Cylinder markers1
       Splitter Ratio: 0.5
     Tree Height: 611
   - Class: rviz/Selection
@@ -68,6 +66,95 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        arm_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        arm_elbow_F10_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_elbow_F10_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_elbow_F10_2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_elbow_F3_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_elbow_flex_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_elbow_flex_servo_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_F10_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_F10_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_F10_2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_F3_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_lift_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_lift_servo_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_pan_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_shoulder_pan_servo_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_wrist_F3_0_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_wrist_flex_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        arm_wrist_flex_servo_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         base_footprint:
           Alpha: 1
           Show Axes: false
@@ -120,15 +207,39 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        gyro_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        mount_xtion_pro_link:
+        gripper_active_finger_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+        gripper_active_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        gripper_servo_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_static_finger_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_static_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gyro_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         plate_bottom_link:
           Alpha: 1
           Show Axes: false
@@ -509,6 +620,7 @@ Visualization Manager:
         Bumper Hit: false
         Cylinder: true
         Cylinder markers: true
+        Cylinder n. detections: true
         Face markers: true
         Face waypoints: true
         Full Plan: false
@@ -526,7 +638,6 @@ Visualization Manager:
           Trajectory Cloud: true
           Value: false
         Map: false
-        Marker: true
         Navigation waypoints: true
         Plane: true
         Ring Image: true
@@ -535,14 +646,6 @@ Visualization Manager:
         TF: true
         Value: true
       Zoom Factor: 1
-    - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /waypoint_marker
-      Name: Marker
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /face_markers
@@ -556,7 +659,7 @@ Visualization Manager:
       Marker Topic: /waypoint_markers
       Name: Navigation waypoints
       Namespaces:
-        {}
+        waypoints: true
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -643,6 +746,14 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /cylinder_n_detections_markers
+      Name: Cylinder n. detections
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
     - Class: rviz/Image
       Enabled: true
       Image Topic: /ring_image
@@ -660,7 +771,7 @@ Visualization Manager:
       Marker Topic: /ring_markers
       Name: Ring markers
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true

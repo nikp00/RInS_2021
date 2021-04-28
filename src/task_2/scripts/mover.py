@@ -1,239 +1,172 @@
 import rospy
 import math
+import numpy as np
 import tf2_geometry_msgs
 import tf2_ros
 import tf
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
 
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import PoseArray, PoseStamped, Point, Quaternion, Pose, Twist
 from move_base_msgs.msg import MoveBaseActionResult
 from nav_msgs.srv import GetPlan
 from actionlib_msgs.msg import GoalID
-from task_1.srv import TextToSpeechService, TextToSpeechServiceResponse
+from sensor_msgs.msg import Image
+from nav_msgs.msg import Odometry
 
 
 class Mover:
     def __init__(self):
         self.node = rospy.init_node("mover")
-        self.waypoint_markers_publisher = rospy.Publisher(
-            "/waypoint_markers", MarkerArray, queue_size=10
-        )
-        self.face_waypoint_markers_publisher = rospy.Publisher(
-            "/face_waypoint_markers", MarkerArray, queue_size=10
-        )
-        self.pose_publisher = rospy.Publisher(
-            "/move_base_simple/goal", PoseStamped, queue_size=10
-        )
-        self.cancel_goal_publisher = rospy.Publisher(
-            "/move_base/cancel", GoalID, queue_size=10
-        )
-        self.rotation_publisher = rospy.Publisher(
-            "/cmd_vel_mux/input/teleop", Twist, queue_size=10
-        )
+        self.bridge = CvBridge()
 
-        rospy.wait_for_service("text_to_speech")
-        self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
+        self.forward_counter = 0
 
-        self.discovered_faces = 0
-        self.n_discovered_faces = 0
-        self.waypoint_markers = MarkerArray()
-        self.face_waypoint_markers = MarkerArray()
-        self.replay_waypoints = PoseArray()
-        self.seq = 0
-
-        self.states = {
-            0: "Get next waypoint",
-            1: "Moving to waypoint",
-            2: "Move to face",
-            3: "Moving to face",
-            4: "Speaking to face",
-            5: "Return to last saved position",
-            6: "Returning to last saved position",
-            7: "Rotate",
-            8: "Rotating",
-            9: "Finished",
-            10: "Finished, unsuccessfully",
-            11: "End",
+        # Parameters
+        self.params = {
+            "replay_waypoints": rospy.get_param("~replay_waypoints"),
+            "rotate_on_replay": rospy.get_param("~rotate_on_replay"),
         }
 
-        self.rotation_state = -1
-        self.state = 0
-        self.last_face = list()
-        self.stored_pose = None
-        self.last_waypoint = None
-        self.replay = False
+        # Detected objects data
+        self.rings = {"data": PoseArray(), "last_id": 0}
+        self.cylinders = {"data": PoseArray(), "last_id": 0}
+
+        # Other data
         self.starting_pose = None
-        self.number_of_faces = rospy.get_param("~number_of_faces")
-        self.distance_to_face = rospy.get_param("~distance_to_face")
-        self.enable_rotation = rospy.get_param("~enable_rotation")
+        self.stored_pose = None
+        self.image = None
+
+        # States
+        self.states = [
+            "get_next_waypoint",
+            "moving_to_waypoint",
+            "move_to_cylinder",
+            "moving_to_cylinder",
+            "move_to_ring",
+            "moving_to_ring",
+            "return_to_stored_pose",
+            "return_home",
+            "end",
+        ]
+        self.state = {
+            "main": "get_next_waypoint",
+            "rotation": 0,
+            "replay": False,
+        }
+
+        # Navigation
         self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
-
+        self.waypoint_markers = MarkerArray()
+        self.seq = 0
         self.n_waypoints = len(self.waypoints.poses)
+        self.visited_waypoints = list()
 
-        self.result_sub = rospy.Subscriber(
-            "/move_base/result", MoveBaseActionResult, self.result_sub_callback
-        )
-
-        self.face_sub = rospy.Subscriber(
-            "/face_markers", MarkerArray, self.face_markers_sub_callback
-        )
-
-        self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
-
+        # TF Buffer
         self.tf_buf = tf2_ros.Buffer()
         self.tf2_listener = tf2_ros.TransformListener(self.tf_buf)
 
+        # Publishers
+        self.waypoint_markers_pub = rospy.Publisher(
+            "/waypoint_markers", MarkerArray, queue_size=10
+        )
+        self.pose_pub = rospy.Publisher(
+            "/move_base_simple/goal", PoseStamped, queue_size=10
+        )
+        self.cancel_goal_pub = rospy.Publisher(
+            "/move_base/cancel", GoalID, queue_size=10
+        )
+        self.fine_navigation_img_pub = rospy.Publisher(
+            "/fine_navigation_image", Image, queue_size=10
+        )
+        self.twist_pub = rospy.Publisher(
+            "/cmd_vel_mux/input/teleop", Twist, queue_size=10
+        )
+
+        # Services
+        self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
+
+        # Subscribers
+        self.result_sub = rospy.Subscriber(
+            "/move_base/result", MoveBaseActionResult, self.result_sub_callback
+        )
+        self.cylinder_sub = rospy.Subscriber(
+            "/cylinder_pose", PoseArray, self.cylinder_sub_callback
+        )
+        self.image_sub = rospy.Subscriber(
+            "/camera/rgb/image_raw", Image, self.image_callback
+        )
+        print(self.params)
         self.run()
 
     def run(self):
         r = rospy.Rate(1)
-        while self.pose_publisher.get_num_connections() < 1:
+        while self.pose_pub.get_num_connections() < 1:
             r.sleep()
 
         self.starting_pose = self.get_current_pose()
 
         while not rospy.is_shutdown():
-            self.waypoint_markers_publisher.publish(self.waypoint_markers)
-            self.face_waypoint_markers_publisher.publish(self.face_waypoint_markers)
+            r.sleep()
+            # self.waypoint_markers_pub.publish(self.waypoint_markers)
 
-            # If there is a new detected face in the queue, move to it
-            if self.state in (0, 1) and len(self.last_face) > 0:
-                self.state = 2
+            # if (
+            #     self.state["main"] in ("get_next_waypoint", "moving_to_waypoint")
+            #     and len(self.cylinders["data"].poses) > self.cylinders["last_id"]
+            # ):
+            #     self.state["main"] = "move_to_cylinder"
+            # elif (
+            #     self.state["main"] in ("get_next_waypoint", "moving_to_waypoint")
+            #     and len(self.cylinders["data"].poses) > self.cylinders["last_id"]
+            # ):
+            #     self.state["main"] = "move_to_ring"
 
-            # if replay isn't enabled and there is no available waypoint, enable replay
-            if not self.replay and len(self.waypoints.poses) == 0:
-                self.replay = True
-                self.waypoints.poses = self.replay_waypoints.poses[0:-1]
-                self.replay_waypoints = None
-                if self.enable_rotation:
-                    self.speak(
-                        "I haven't found all the faces yet but there are no remaining waypoints."
-                        + "I will replay all the waypoints in reverse and do a full rotation on every one to maximize my chances to find all the faces."
-                    )
-                else:
-                    self.speak(
-                        "I haven't found all the faces yet but there are no remaining waypoints."
-                        + "I will replay all the waypoints in reverse to try and find all the faces."
-                    )
-                print("Replay waypoints in reverse order")
-
-            # State machine
-            # state: Get next waypoint
-            if self.state == 0:
-                # Found all faces
-                if self.number_of_faces == self.discovered_faces:
-                    self.state = 9
-                # Not all waypoints used, send the next nearest waypoint
-                elif not self.replay:
-                    self.state = 1
-                    next_waypoint = self.find_nearest_waypoint()
-                    self.last_waypoint = next_waypoint
-                    self.replay_waypoints.poses.append(next_waypoint)
-                    self.waypoints.poses.remove(next_waypoint)
-                    self.send_next_waypoint(next_waypoint)
-                    print(self.states[self.state])
-
-                # All waypoints used, all faces not found, replay all the waypoints in the reverse oreder
-                elif self.replay and len(self.waypoints.poses) > 0:
-                    # Rotation is enabled and robot moved to a new waypoint
-                    if self.enable_rotation and self.rotation_state == -1:
-                        self.rotation_state = 0
-                        self.state = 7
-                    else:
-                        self.rotation_state = -1
-                        print("Remaining waypoints: ", len(self.waypoints.poses))
-                        next_waypoint = self.waypoints.poses.pop()
-                        self.last_waypoint = next_waypoint
-                        current_pose = self.get_current_pose()
-                        next_waypoint.orientation = self.fix_angle(
-                            next_waypoint, current_pose
-                        )
-                        self.send_next_waypoint(next_waypoint)
-                        self.state = 1
-                else:
-                    self.state = 10
-            # state: Move to face
-            elif self.state == 2:
-                # Add the current waypoint back to the target list and set state to moving to face
-                self.state = 3
-                if self.last_waypoint != None:
-                    self.waypoints.poses.append(self.last_waypoint)
-                self.move_to_face()
-                print(self.states[self.state])
-            # state: Speaking to face
-            elif self.state == 4:
-                # Change state to return to last saved point
-                self.state = 5
-                self.n_discovered_faces += 1
-                self.speak(
-                    f"Hello, i will call you face number {self.n_discovered_faces}"
-                )
-                rospy.sleep(3)
-                print(self.states[self.state])
-            # state: Return to last saved position
-            elif self.state == 5:
-                # Publish the last stored pose and set state to returning to last saved pose
-                self.pose_publisher.publish(self.stored_pose)
-                self.state = 6
-                print(self.states[self.state])
-            elif self.state == 7:
-                self.state = 8
-                self.rotate()
-            # state: Found all faces
-            elif self.state == 9:
-                self.speak(f"I found all {self.number_of_faces} faces. Returning home")
-                self.send_next_waypoint(self.starting_pose.pose)
-                self.state = 11
-            # state: No waypoints remaining, didn't find all faces"
-            elif self.state == 10:
-                self.speak(
-                    f"I found {self.discovered_faces} out of {self.number_of_faces} faces. Returning home."
-                )
-                self.send_next_waypoint(self.starting_pose.pose)
-                self.state = 11
-            # state: Finished
-            elif self.state == 11:
-                print("Finished")
-
-    def move_to_face(self):
-        # Moves robot to the last new detected face
-
-        self.cancel_goal_publisher.publish(GoalID())
-        rospy.sleep(1)
-
-        self.stored_pose = self.get_current_pose()
-
-        msg = PoseStamped()
-        msg.header.seq = len(self.face_waypoint_markers.markers)
-        msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = "map"
-
-        angle = tf.transformations.euler_from_quaternion(
-            [
-                self.last_face[0].pose.orientation.x,
-                self.last_face[0].pose.orientation.y,
-                self.last_face[0].pose.orientation.z,
-                self.last_face[0].pose.orientation.w,
-            ]
-        )[2]
-
-        d = 0.05 * self.distance_to_face
-        msg.pose.position = Point(
-            self.last_face[0].pose.position.x + d * math.cos(angle),
-            self.last_face[0].pose.position.y + d * math.sin(angle),
-            0,
-        )
-
-        # msg.pose.orientation = self.stored_pose.pose.orientation
-        msg.pose.orientation = self.fix_angle(self.last_face[0].pose, msg)
-
-        self.face_waypoint_markers.markers.append(
-            self.create_marker(len(self.face_waypoint_markers.markers), msg.pose, b=255)
-        )
-
-        self.last_face = self.last_face[1:]
-
-        self.pose_publisher.publish(msg)
+            # if self.state["main"] == "get_next_waypoint":
+            #     if len(self.waypoints.poses) > 0:
+            #         next_waypoint = self.find_nearest_waypoint()
+            #         self.visited_waypoints.append(next_waypoint)
+            #         self.waypoints.poses.remove(next_waypoint)
+            #         self.waypoint_markers.markers.append(
+            #             self.create_marker(self.seq, next_waypoint)
+            #         )
+            #         self.send_next_waypoint(next_waypoint)
+            #         self.state["main"] = "moving_to_waypoint"
+            #         print(self.state)
+            #     elif (
+            #         self.params["replay_waypoints"] and len(self.visited_waypoints) > 0
+            #     ):
+            #         next_waypoint = self.visited_waypoints.pop()
+            #         current_pose = self.get_current_pose()
+            #         next_waypoint.orientation = self.fix_angle(
+            #             next_waypoint, current_pose
+            #         )
+            #         self.send_next_waypoint(next_waypoint)
+            #         self.state["main"] = "moving_to_waypoint"
+            #         self.state["replay"] = True
+            #         print(self.state)
+            #     else:
+            #         self.send_next_waypoint(self.starting_pose.pose)
+            #         self.state["main"] = "return_home"
+            #         print(self.state)
+            # elif self.state["main"] == "move_to_cylinder":
+            #     self.cancel_goal_pub.publish(GoalID())
+            #     rospy.sleep(1)
+            #     self.stored_pose = self.get_current_pose()
+            #     last_waypoint = self.visited_waypoints.pop()
+            #     self.waypoints.poses.append(last_waypoint)
+            #     self.waypoint_markers.markers.pop()
+            #     cylinder = self.cylinders["data"].poses[self.cylinders["last_id"]]
+            #     self.cylinders["last_id"] += 1
+            #     self.move_to_cylinder(cylinder)
+            #     self.state["main"] = "moving_to_cylinder"
+            #     print(self.state)
+            # elif self.state["main"] == "return_to_stored_pose":
+            #     self.pose_pub.publish(self.stored_pose)
+            #     self.stored_pose = None
+            #     self.state["main"] = "moving_to_waypoint"
+            # elif self.state["main"] == "end":
+            #     break
 
     def get_current_pose(self) -> PoseStamped:
         pose_translation = None
@@ -307,7 +240,6 @@ class Mover:
         return waypoint
 
     def fix_angle(self, pose: Pose, current_pose: PoseStamped) -> Quaternion:
-        # Calculates the angle at which the robot saw the face
         dx = pose.position.x - current_pose.pose.position.x
         dy = pose.position.y - current_pose.pose.position.y
         return Quaternion(
@@ -315,8 +247,6 @@ class Mover:
         )
 
     def send_next_waypoint(self, waypoint: Pose):
-        self.waypoint_markers.markers.append(self.create_marker(self.seq, waypoint))
-
         msg = PoseStamped()
         msg.header.seq = self.seq
         msg.header.stamp = rospy.Time.now()
@@ -324,7 +254,38 @@ class Mover:
 
         msg.pose.position = waypoint.position
         msg.pose.orientation = waypoint.orientation
-        self.pose_publisher.publish(msg)
+        self.pose_pub.publish(msg)
+
+    def move_to_cylinder(self, cylinder: Pose):
+        msg = PoseStamped()
+        msg.header.seq = len(self.cylinders["data"].poses)
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = "map"
+
+        angle = tf.transformations.euler_from_quaternion(
+            [
+                cylinder.orientation.x,
+                cylinder.orientation.y,
+                cylinder.orientation.z,
+                cylinder.orientation.w,
+            ]
+        )[2]
+
+        d = 0.05 * 10
+
+        msg.pose.position = Point(
+            cylinder.position.x + d * math.cos(angle),
+            cylinder.position.y + d * math.sin(angle),
+            0,
+        )
+
+        msg.pose.orientation = self.fix_angle(cylinder, msg)
+
+        self.waypoint_markers.markers.append(
+            self.create_marker(self.seq + 100, msg.pose, b=1)
+        )
+
+        self.pose_pub.publish(msg)
 
     def create_marker(
         self,
@@ -364,76 +325,95 @@ class Mover:
 
         return msg
 
-    def rotate(self):
-        if self.rotation_state == 0:
-            self.stored_pose = self.get_current_pose()
-            print("Stored pose")
+    def image_callback(self, data):
+        try:
+            self.image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            print(e)
 
-        self.rotation_state += 1
-        c_pose = self.get_current_pose()
-        rz = tf.transformations.euler_from_quaternion(
-            [
-                c_pose.pose.orientation.x,
-                c_pose.pose.orientation.y,
-                c_pose.pose.orientation.z,
-                c_pose.pose.orientation.w,
-            ]
-        )[2]
-        rz += math.pi / 2
-        c_pose.pose.orientation = Quaternion(
-            *list(tf.transformations.quaternion_from_euler(0, 0, rz))
+        limits = {
+            "red": (np.array([0, 10, 65]), np.array([20, 255, 255])),
+            "yellow": (np.array([20, 10, 65]), np.array([40, 255, 255])),
+            "green": (np.array([40, 10, 65]), np.array([70, 255, 255])),
+            "blue": (np.array([70, 10, 65]), np.array([110, 255, 255])),
+        }
+
+        hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, *limits["red"])
+        countour, hierarchy = cv2.findContours(
+            mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
         )
-        print(self.rotation_state, rz)
-        self.pose_publisher.publish(c_pose)
+        if len(countour) > 0:
+            depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
+            depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
+            yd = int(depth_image.shape[0] / 2)
+            xd = int(depth_image.shape[1] / 2)
+            dist = np.nanmean(depth_image[yd - 5 : yd + 5, xd - 5 : xd + 5])
+            print()
+            print(dist)
+
+            cont = max(countour, key=cv2.contourArea)
+            m = cv2.moments(cont)
+            cx = int(m["m10"] / m["m00"])
+            cy = int(m["m01"] / m["m00"])
+            cv2.circle(self.image, (cx, cy), 3, (0, 255, 0))
+            cv2.drawContours(self.image, [cont], -1, (0, 255, 0), 2)
+
+            msg = Twist()
+
+            y = int(self.image.shape[0] / 2)
+            x = int(self.image.shape[1] / 2)
+
+            step = 0.08
+            # if abs(cx - x) > 100:
+            # step = 0.08
+            if abs(cx - x) < 10:
+                step = 0.005
+            elif abs(cx - x) < 30:
+                step = 0.01
+            elif abs(cx - x) < 50:
+                step = 0.03
+            if abs(cx - x) < 2:
+                if not np.isnan(dist):
+                    msg.linear.x = 0.05
+                    print("forward")
+                elif self.forward_counter < 40:
+                    msg.linear.x = 0.05
+                    self.forward_counter += 1
+                    print("forward manual", self.forward_counter)
+                else:
+                    print("center")
+
+            else:
+                if cx > x:
+                    print("Turn right", cx, x, step)
+                    msg.angular.z = -step
+                elif cy < x:
+                    print("Turn left", cx, x, step)
+                    msg.angular.z = step
+
+            self.twist_pub.publish(msg)
+            self.fine_navigation_img_pub.publish(self.bridge.cv2_to_imgmsg(self.image))
 
     def result_sub_callback(self, data):
-
-        # State machine
-        # state: Moving to waypoint
-        if self.state == 1:
-            if data.status.status == 3:
-                """Waypoint reached successfully, increment seq and
-                set state to get next waypoint"""
+        res_state = data.status.status
+        if self.state["main"] == "moving_to_waypoint":
+            if res_state in (3, 4):
                 self.seq += 1
-                self.state = 0
-                print(self.states[self.state])
-            elif data.status.status == 4:
-                self.seq += 1
-                self.state = 0
-                print("Goal cant be reached")
-        # state: Moving to face
-        elif self.state == 3:
-            if data.status.status == 3:
-                """Face reached successfully, change state to Speaking to face"""
-                self.state = 4
-                print(self.states[self.state])
-            elif data.status.status == 4:
-                """Face couldn't be reached, change state to Return to last saved position"""
-                self.state = 5
-        # Returning to last saved position
-        elif self.state == 6:
-            if data.status.status == 3:
-                """Saved position reached successfully, change state to Get next waypoint"""
-                self.state = 0
-                print(self.states[self.state])
-        elif self.state == 8:
-            if data.status.status == 3:
-                if self.rotation_state < 3:
-                    self.state = 7
-                    print("Next rotation")
-                else:
-                    print("Resume movement")
-                    self.state = 0
-                    self.rotation_state = 0
-            else:
-                print("Resume movement")
-                self.state = 0
-                self.rotation_state = 0
+                self.state["main"] = "get_next_waypoint"
+                self.state["replay"] = False
+                print(self.state, 3)
+                self.waypoint_markers.markers[-1].color.a = 0.3
+        elif self.state["main"] == "moving_to_cylinder":
+            if res_state in (3, 4):
+                self.state["main"] = "return_to_stored_pose"
+        elif self.state["main"] == "return_home":
+            if res_state == 3:
+                self.state["main"] = "end"
+                print(self.state)
 
-    def face_markers_sub_callback(self, data):
-        if self.discovered_faces < len(data.markers):
-            self.discovered_faces = len(data.markers)
-            self.last_face.append(data.markers[-1])
+    def cylinder_sub_callback(self, data):
+        self.cylinders["data"] = data
 
 
 if __name__ == "__main__":
