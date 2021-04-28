@@ -1,5 +1,15 @@
 import rospy
+import copy
+import tf2_geometry_msgs
+import tf2_ros
+import tf
+import numpy as np
+from collections import defaultdict
+
+
 from visualization_msgs.msg import MarkerArray, Marker
+
+from task_2.srv import ColorClassifierService, ColorClassifierServiceRequest
 from geometry_msgs.msg import (
     PointStamped,
     Point,
@@ -9,13 +19,7 @@ from geometry_msgs.msg import (
     PoseArray,
 )
 from std_msgs.msg import ColorRGBA, Header
-import copy
-
-import tf2_geometry_msgs
-import tf2_ros
-import tf
-
-import numpy as np
+from task_2.msg import CylinderSegmentation
 
 
 class CylinderHandler:
@@ -30,6 +34,7 @@ class CylinderHandler:
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
+        # Publishers
         self.cylinder_marker_publisher = rospy.Publisher(
             "cylinder_markers", MarkerArray, queue_size=10
         )
@@ -40,8 +45,13 @@ class CylinderHandler:
             "cylinder_pose", PoseArray, queue_size=10
         )
 
+        # Services
+        self.get_color = rospy.ServiceProxy("/color_classifier", ColorClassifierService)
+        rospy.wait_for_service("/color_classifier")
+
+        # Subscribers
         self.pose_subscriber = rospy.Subscriber(
-            "detected_cylinder", PointStamped, self.cylinder_callback
+            "detected_cylinder", CylinderSegmentation, self.cylinder_callback
         )
 
         rospy.spin()
@@ -68,8 +78,18 @@ class CylinderHandler:
         pose.pose.orientation = pose_translation.transform.rotation
         return pose.pose
 
-    def cylinder_callback(self, data: PointStamped):
-        base_pose = self.get_current_pose(data.header.stamp)
+    def cylinder_callback(self, data: CylinderSegmentation):
+        color = data.color
+        point = data.point
+
+        req = ColorClassifierServiceRequest()
+        req.mode = 1
+        req.color = color
+        res = self.get_color(req)
+
+        print(res.color)
+
+        base_pose = self.get_current_pose(point.header.stamp)
         angle = tf.transformations.euler_from_quaternion(
             [
                 base_pose.orientation.x,
@@ -80,12 +100,12 @@ class CylinderHandler:
         )[2]
 
         angle = np.arctan2(
-            base_pose.position.y - data.point.y,
-            base_pose.position.x - data.point.x,
+            base_pose.position.y - point.point.y,
+            base_pose.position.x - point.point.x,
         )
 
         pose = PoseStamped()
-        pose.pose.position = data.point
+        pose.pose.position = point.point
         pose.pose.orientation = Quaternion(
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )
@@ -94,7 +114,6 @@ class CylinderHandler:
             return
 
         pose.pose.position.z = 0
-        print(pose)
 
         skip = False
         for e in self.cylinders:
@@ -115,12 +134,20 @@ class CylinderHandler:
                     (e.pose.pose.position.z + pose.pose.position.z) / 2
                 )
 
+                e.color[
+                    (res.marker_color.r, res.marker_color.g, res.marker_color.b)
+                ] += 1
+
                 e.n_detections += 1
                 skip = True
                 break
 
         if not skip:
-            cylinder = Cylinder(pose, "yellow", self.seq)
+            cylinder = Cylinder(
+                pose,
+                (res.marker_color.r, res.marker_color.g, res.marker_color.b),
+                self.seq,
+            )
             self.seq += 1
             self.cylinders.append(cylinder)
 
@@ -178,13 +205,11 @@ class CylinderHandler:
 
 
 class Cylinder:
-    colors = {
-        "yellow": (255, 255, 0),
-    }
-
-    def __init__(self, pose: PoseStamped, color: str, id: int):
+    def __init__(self, pose: PoseStamped, color: tuple, id: int):
         self.pose = pose
-        self.color = Cylinder.colors["yellow"]  # color
+        # self.color = Cylinder.colors["yellow"]  # color
+        self.color = defaultdict(int)
+        self.color[color] += 1
         self.id = id
         self.n_detections = 1
 
@@ -202,7 +227,11 @@ class Cylinder:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        m.color = ColorRGBA(*self.color, 1)
+        # m.color = ColorRGBA(*self.color, 1)
+        color = max(self.color, key=self.color.get)
+        color = map(lambda x: x / 255, color)
+        m.color = ColorRGBA(*color, 1)
+
         m.lifetime = rospy.Duration(0)
         return m
 

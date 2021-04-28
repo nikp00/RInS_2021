@@ -1,5 +1,5 @@
 <launch>
-    <node name="map_segmentation" pkg="task_2" type="map_segmentation.py" output="screen">
+    <!-- <node name="map_segmentation" pkg="task_2" type="map_segmentation.py" output="screen">
         <param name="segmentation_size" type="int" value="1" />
         <param name="min_quad_size" type="int" value="15" />
     </node>
@@ -9,14 +9,16 @@
     <node name="mover" pkg="task_2" type="mover.py" output="screen">
         <param name="replay_waypoints" value="true" />
         <param name="rotate_on_replay" value="true" />
-    </node>
+    </node> -->
 
     <node name="cylinder_segmentation" pkg="task_2" type="cylinder_segmentation" output="log">
         <remap from="input" to="/camera/depth/points" />
     </node>
-    <node name="cylinder_handler" pkg="task_2" type="cylinder_handler.py" output="log" />
+    <node name="cylinder_handler" pkg="task_2" type="cylinder_handler.py" output="screen" />
 
-    <!-- <node name="ring_segmentation" pkg="task_2" type="ring_segmentation.py" output="screen" /> -->
+    <node name="color_classifier" pkg="task_2" type="color_classifier.py" output="screen" args="$(find task_2)/data/" />
+
+    <!-- <node name=" ring_segmentation" pkg=" task_2" type=" ring_segmentation.py" output=" screen" /> -->
 
 
     <node name="move_arm" pkg="task_2" type="move_arm.py" output="log" />

@@ -70,15 +70,16 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 #Generate messages in the 'msg' folder
-#add_message_files(
-#  FILES
-#)
+add_message_files(
+  FILES
+  CylinderSegmentation.msg
+)
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   TextToSpeechService.srv
-  color.srv
+  ColorClassifierService.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -212,6 +213,7 @@ catkin_install_python(PROGRAMS
   scripts/capture_train_img.py
   scripts/ring_segmentation.py
   scripts/move_arm.py
+  scripts/color_classifier.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -16,7 +16,10 @@
 #include "pcl/point_cloud.h"
 #include "tf2_ros/transform_listener.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+
+#include "std_msgs/ColorRGBA.h"
 #include "geometry_msgs/PointStamped.h"
+#include "task_2/CylinderSegmentation.h"
 
 ros::Publisher pubx;
 ros::Publisher puby;
@@ -26,7 +29,7 @@ tf2_ros::Buffer tf2_buffer;
 
 double min_z, max_z, min_y, max_y;
 
-typedef pcl::PointXYZ PointT;
+typedef pcl::PointXYZRGB PointT;
 
 void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 {
@@ -145,7 +148,26 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
         float radius_val = coefficients_cylinder->values[6];
         float radius_target = 0.12;
 
+        uint32_t r = 0;
+        uint32_t g = 0;
+        uint32_t b = 0;
+        uint32_t rgb;
         int size = cloud_cylinder->points.size();
+        int i = 0;
+        int increment = 500;
+        for (; i < size; i += increment)
+        {
+            rgb = *reinterpret_cast<int *>(&cloud_cylinder->points[i].rgb);
+            r += (rgb >> 16) & 0x0000ff;
+            g += (rgb >> 8) & 0x0000ff;
+            b += (rgb)&0x0000ff;
+        }
+
+        r = r / (i / increment);
+        g = g / (i / increment);
+        b = b / (i / increment);
+
+        printf("r: %d, g: %d, b: %d, samples: %d \n", r, g, b, i / increment);
 
         std::cout << "Radius: " << radius_val << ", Size: " << size << std::endl;
 
@@ -182,7 +204,19 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
         }
 
         tf2::doTransform(point_camera, point_map, tss);
-        cylinder_pose_publisher.publish(point_map);
+
+        task_2::CylinderSegmentation msg;
+        std_msgs::ColorRGBA color;
+
+        color.r = r;
+        color.g = g;
+        color.b = b;
+        color.a = 1;
+
+        msg.point = point_map;
+        msg.color = color;
+
+        cylinder_pose_publisher.publish(msg);
 
         pcl::PCLPointCloud2 outcloud_cylinder;
         pcl::toPCLPointCloud2(*cloud_cylinder, outcloud_cylinder);
@@ -195,6 +229,8 @@ int main(int argc, char **argv)
     // Initialize ROS
     ros::init(argc, argv, "cylinder_segmentation");
     ros::NodeHandle nh;
+
+    std::cout << "Started" << std::endl;
 
     // For transforming between coordinate frames
     tf2_ros::TransformListener tf2_listener(tf2_buffer);
@@ -210,7 +246,7 @@ int main(int argc, char **argv)
     pubx = nh.advertise<pcl::PCLPointCloud2>("planes", 1);
     puby = nh.advertise<pcl::PCLPointCloud2>("cylinder", 1);
 
-    cylinder_pose_publisher = nh.advertise<geometry_msgs::PointStamped>("detected_cylinder", 1);
+    cylinder_pose_publisher = nh.advertise<task_2::CylinderSegmentation>("detected_cylinder", 1);
 
     // Spin
     ros::spin();

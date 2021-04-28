@@ -1,0 +1,9 @@
+uint8 mode # 0 => predict from image, 1 => predict from single value 
+# mode 0
+sensor_msgs/Image image
+uint32[] bounding_box
+# mode 1
+std_msgs/ColorRGBA color
+---
+std_msgs/ColorRGBA marker_color
+string color
