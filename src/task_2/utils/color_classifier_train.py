@@ -10,6 +10,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 
+import colorsys
+
 import os
 import pickle
 
@@ -33,7 +35,7 @@ COLOR_DEFINITIONS = {
 class ColorClassifier:
 
     # path = pot do dataseta, k = stevilo sosedov za knn (default = 3)
-    def __init__(self, path, k=3):
+    def __init__(self, path, k=10):
         self.data = []
         self.labels = []
 
@@ -43,7 +45,9 @@ class ColorClassifier:
         self.model.fit(self.data, self.labels)
 
     def getColorNameFromRGB(self, RGBValue):
-        return self.model.predict([list(RGBValue)])[0]
+        hsv = colorsys.rgb_to_hsv(*[e / 255 for e in RGBValue])
+        hsv = (hsv[0], 1, 1)
+        return self.model.predict([hsv])[0]
 
     # Bounding box je tuple (x1,y1,x2,y2), če ga ne podamo obravnavam celo sliko
     def getColorFromImage(self, rgb_image, bounding_box=None, step=10):
@@ -73,7 +77,14 @@ class ColorClassifier:
                 if line_count == 0:
                     print(f'Column names are {", ".join(row)}')
                 else:
-                    self.data.append((row[0], row[1], row[2]))
+                    hsv = colorsys.rgb_to_hsv(
+                        int(row[0]) / 255, int(row[1]) / 255, int(row[2]) / 255
+                    )
+                    hsv = (hsv[0], 1, 1)
+                    # self.data.append(
+                    #     (int(row[0]) / 255, int(row[1]) / 255, int(row[2]) / 255)
+                    # )
+                    self.data.append(hsv)
                     self.labels.append(row[3].lower())
                 line_count += 1
             print(f"Processed {line_count} lines.")
@@ -122,7 +133,7 @@ class ColorClassifier:
 
 base_path = os.path.abspath(os.pardir)
 dataset_path = base_path + "/data/color_classifier_data/dataset.csv"
-test_img_path = base_path + "/data/color_classifier_data/test.jpg"
+test_img_path = base_path + "/data/color_classifier_data/test3.jpg"
 export_path = base_path + "/data/color_classifier_data/model.pickle"
 labels_path = base_path + "/data/color_classifier_data/labels.pickle"
 

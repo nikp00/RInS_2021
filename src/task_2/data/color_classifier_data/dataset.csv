@@ -1,4 +1,12 @@
 red,green,blue,label
+220,198,52,Yellow
+189,185,51,Yellow
+202,198,52,Yellow
+163,160,49,Yellow
+199,196,68,Yellow
+192,188,68,Yellow
+191,188,68,Yellow
+190,187,68,Yellow
 20,139,240,Blue
 144,249,131,Green
 168,25,156,Pink
@@ -19,7 +27,7 @@ red,green,blue,label
 159,253,91,Green
 58,137,127,Green
 201,191,242,Purple
-253,208,44,Yellow
+253,208,44,Yelolow
 95,189,94,Green
 119,183,248,Blue
 71,45,228,Blue

@@ -87,7 +87,7 @@ class CylinderHandler:
         req.color = color
         res = self.get_color(req)
 
-        print(res.color)
+        print(res.color, color.r, color.g, color.b)
 
         base_pose = self.get_current_pose(point.header.stamp)
         angle = tf.transformations.euler_from_quaternion(

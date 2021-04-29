@@ -5,6 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import pickle
 from cv_bridge import CvBridge, CvBridgeError
+import colorsys
 
 
 from std_msgs.msg import ColorRGBA
@@ -45,7 +46,9 @@ class ColorClassifier:
         return res
 
     def getColorNameFromRGB(self, RGBValue):
-        return self.clf.predict([list(RGBValue)])[0]
+        hsv = colorsys.rgb_to_hsv(*[e / 255 for e in RGBValue])
+        hsv = (hsv[0], 1, 1)
+        return self.clf.predict([hsv])[0]
 
     def getColorFromImage(self, rgb_image, bounding_box=None, step=10):
         h = rgb_image.shape[0]
