@@ -19,7 +19,7 @@ from geometry_msgs.msg import (
     PoseArray,
 )
 from std_msgs.msg import ColorRGBA, Header
-from task_2.msg import CylinderSegmentation
+from task_2.msg import CylinderSegmentation, CylinderObject, CylinderPoseAndColorArray
 
 
 class CylinderHandler:
@@ -42,7 +42,7 @@ class CylinderHandler:
             "cylinder_n_detections_markers", MarkerArray, queue_size=10
         )
         self.cylinder_pose_publisher = rospy.Publisher(
-            "cylinder_pose", PoseArray, queue_size=10
+            "cylinder_pose", CylinderPoseAndColorArray, queue_size=10
         )
 
         # Services
@@ -146,6 +146,7 @@ class CylinderHandler:
             cylinder = Cylinder(
                 pose,
                 (res.marker_color.r, res.marker_color.g, res.marker_color.b),
+                res.color,
                 self.seq,
             )
             self.seq += 1
@@ -156,7 +157,9 @@ class CylinderHandler:
             [e.to_text() for e in self.cylinders]
         )
         self.cylinder_pose_publisher.publish(
-            PoseArray(Header(), [e.pose.pose for e in self.cylinders])
+            CylinderPoseAndColorArray(
+                [CylinderObject(e.pose.pose, e.color_name) for e in self.cylinders]
+            )
         )
 
     def create_marker(
@@ -205,13 +208,14 @@ class CylinderHandler:
 
 
 class Cylinder:
-    def __init__(self, pose: PoseStamped, color: tuple, id: int):
+    def __init__(self, pose: PoseStamped, color: tuple, color_name: str, id: int):
         self.pose = pose
         # self.color = Cylinder.colors["yellow"]  # color
         self.color = defaultdict(int)
         self.color[color] += 1
         self.id = id
         self.n_detections = 1
+        self.color_name = color_name
 
     def to_marker(self):
         m = Marker()

@@ -14,6 +14,8 @@ from nav_msgs.srv import GetPlan
 from actionlib_msgs.msg import GoalID
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
+from task_2.msg import CylinderPoseAndColorArray
 
 
 class Mover:
@@ -22,17 +24,22 @@ class Mover:
         self.bridge = CvBridge()
 
         self.forward_counter = 0
+        self.back_counter = 0
 
         # Parameters
         self.params = {
             "replay_waypoints": rospy.get_param("~replay_waypoints"),
             "rotate_on_replay": rospy.get_param("~rotate_on_replay"),
-            "distance_to_cylinder": 15,
+            "distance_to_cylinder": 10,
         }
 
         # Detected objects data
         self.rings = {"data": PoseArray(), "last_id": 0}
-        self.cylinders = {"data": PoseArray(), "last_id": 0, "cancel_counter": 0}
+        self.cylinders = {
+            "data": CylinderPoseAndColorArray(),
+            "last_id": 0,
+            "cancel_counter": 0,
+        }
 
         # Other data
         self.starting_pose = None
@@ -84,6 +91,7 @@ class Mover:
         self.twist_pub = rospy.Publisher(
             "/cmd_vel_mux/input/teleop", Twist, queue_size=10
         )
+        self.arm_control_pub = rospy.Publisher("/arm_command", String, queue_size=10)
 
         # Services
         self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
@@ -93,7 +101,7 @@ class Mover:
             "/move_base/result", MoveBaseActionResult, self.result_sub_callback
         )
         self.cylinder_sub = rospy.Subscriber(
-            "/cylinder_pose", PoseArray, self.cylinder_sub_callback
+            "/cylinder_pose", CylinderPoseAndColorArray, self.cylinder_sub_callback
         )
         # self.image_sub = rospy.Subscriber(
         #     "/camera/rgb/image_raw", Image, self.image_callback
@@ -114,12 +122,12 @@ class Mover:
 
             if (
                 self.state["main"] in ("get_next_waypoint", "moving_to_waypoint")
-                and len(self.cylinders["data"].poses) > self.cylinders["last_id"]
+                and len(self.cylinders["data"].cylinders) > self.cylinders["last_id"]
             ):
                 self.state["main"] = "move_to_cylinder"
             elif (
                 self.state["main"] in ("get_next_waypoint", "moving_to_waypoint")
-                and len(self.cylinders["data"].poses) > self.cylinders["last_id"]
+                and len(self.cylinders["data"].cylinders) > self.cylinders["last_id"]
             ):
                 self.state["main"] = "move_to_ring"
 
@@ -157,12 +165,17 @@ class Mover:
                 if len(self.visited_waypoints) > 0:
                     last_waypoint = self.visited_waypoints.pop()
                     self.waypoints.poses.append(last_waypoint)
-                self.waypoint_markers.markers.pop()
-                cylinder = self.cylinders["data"].poses[self.cylinders["last_id"]]
+                if len(self.waypoint_markers.markers) > 0:
+                    self.waypoint_markers.markers.pop()
+                cylinder = (
+                    self.cylinders["data"].cylinders[self.cylinders["last_id"]].pose
+                )
                 self.cylinders["last_id"] += 1
                 self.move_to_cylinder(cylinder, self.params["distance_to_cylinder"])
                 self.state["main"] = "moving_to_cylinder"
                 print(self.state)
+            elif self.state["main"] == "approach_cylinder":
+                self.approach_cylinder()
             elif self.state["main"] == "return_to_stored_pose":
                 self.pose_pub.publish(self.stored_pose)
                 self.stored_pose = None
@@ -260,7 +273,7 @@ class Mover:
 
     def move_to_cylinder(self, cylinder: Pose, distance_to_cylinder: int):
         msg = PoseStamped()
-        msg.header.seq = len(self.cylinders["data"].poses)
+        msg.header.seq = len(self.cylinders["data"].cylinders)
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = "map"
 
@@ -288,6 +301,109 @@ class Mover:
         )
 
         self.pose_pub.publish(msg)
+
+    def approach_cylinder(self):
+        color = self.cylinders["data"].cylinders[self.cylinders["last_id"] - 1].color
+        try:
+            image = self.bridge.imgmsg_to_cv2(
+                rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
+            )
+        except CvBridgeError as e:
+            print(e)
+
+        limits = {
+            "red": (np.array([0, 10, 65]), np.array([20, 255, 255])),
+            "yellow": (np.array([20, 10, 65]), np.array([40, 255, 255])),
+            "green": (np.array([40, 10, 65]), np.array([70, 255, 255])),
+            "blue": (np.array([70, 10, 65]), np.array([110, 255, 255])),
+        }
+
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(
+            hsv, *limits.get(color, (np.array([0, 0, 0]), np.array([110, 255, 255])))
+        )
+        countour, hierarchy = cv2.findContours(
+            mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        if len(countour) > 0:
+            depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
+            depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
+            yd = int(depth_image.shape[0] / 2)
+            xd = int(depth_image.shape[1] / 2)
+            dist = np.nanmean(depth_image[yd - 5 : yd + 5, xd - 5 : xd + 5])
+            print()
+            print(dist)
+
+            cont = max(countour, key=cv2.contourArea)
+            m = cv2.moments(cont)
+            cx = int(m["m10"] / m["m00"])
+            cy = int(m["m01"] / m["m00"])
+            cv2.circle(image, (cx, cy), 3, (0, 255, 0))
+            cv2.drawContours(image, [cont], -1, (0, 255, 0), 2)
+
+            msg = Twist()
+
+            y = int(image.shape[0] / 2)
+            x = int(image.shape[1] / 2)
+
+            step = 0.08
+            # if abs(cx - x) > 100:
+            # step = 0.08
+            if abs(cx - x) < 10:
+                step = 0.005
+            elif abs(cx - x) < 30:
+                step = 0.01
+            elif abs(cx - x) < 50:
+                step = 0.03
+
+            if self.back_counter == 0:
+                if abs(cx - x) < 2:
+                    if not np.isnan(dist):
+                        if dist > 0.46:
+                            msg.linear.x = 0.05
+                        else:
+                            msg.linear.x = 0.01
+                        print("forward")
+                    elif self.forward_counter < 12:
+                        msg.linear.x = 0.01
+                        self.forward_counter += 1
+                        print("forward manual", self.forward_counter)
+                    elif self.forward_counter < 17:
+                        msg.linear.x = 0.005
+                        self.forward_counter += 1
+                        print("forward manual", self.forward_counter)
+                    else:
+                        if self.back_counter == 0:
+                            self.arm_control_pub.publish("extend")
+                            rospy.sleep(5)
+                            self.arm_control_pub.publish("retract")
+                            self.back_counter = 1
+                            print("Move arm")
+                else:
+                    if cx > x:
+                        print("Turn right", cx, x, step)
+                        msg.angular.z = -step
+                    elif cy < x:
+                        print("Turn left", cx, x, step)
+                        msg.angular.z = step
+            else:
+                if self.back_counter < 4:
+                    msg.linear.x = -0.2
+                    self.back_counter += 1
+                    print("Back", self.back_counter)
+                else:
+                    self.back_counter = 0
+                    self.forward_counter = 0
+                    self.state["main"] = "return_to_stored_pose"
+                    print("Return")
+
+            self.twist_pub.publish(msg)
+        self.fine_navigation_img_pub.publish(self.bridge.cv2_to_imgmsg(image))
+
+    def fade_markers(self):
+        for e in self.waypoint_markers.markers:
+            e.color.a = 0.3
 
     def create_marker(
         self,
@@ -405,20 +521,23 @@ class Mover:
                 self.state["main"] = "get_next_waypoint"
                 self.state["replay"] = False
                 print(self.state, 3)
-                self.waypoint_markers.markers[-1].color.a = 0.3
+                self.fade_markers()
         elif self.state["main"] == "moving_to_cylinder":
             if res_state == 3:
-                self.state["main"] = "return_to_stored_pose"
+                self.state["main"] = "approach_cylinder"
+                # self.state["main"] = "return_to_stored_pose"
             if res_state == 4:
                 if self.cylinders["cancel_counter"] < 2:
                     self.cylinders["cancel_counter"] += 1
-                    cylinder = self.cylinders["data"].poses[
-                        self.cylinders["last_id"] - 1
-                    ]
+                    cylinder = (
+                        self.cylinders["data"]
+                        .cylinders[self.cylinders["last_id"] - 1]
+                        .pose
+                    )
                     self.move_to_cylinder(
                         cylinder,
                         self.params["distance_to_cylinder"]
-                        - self.cylinders["cancel_counter"] * 5,
+                        + self.cylinders["cancel_counter"] * 5,
                     )
                     self.waypoint_markers.markers.pop()
                 else:

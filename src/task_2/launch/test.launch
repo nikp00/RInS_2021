@@ -14,9 +14,9 @@
     <node name="cylinder_segmentation" pkg="task_2" type="cylinder_segmentation" output="log">
         <remap from="input" to="/camera/depth/points" />
     </node>
-    <node name="cylinder_handler" pkg="task_2" type="cylinder_handler.py" output="screen" />
+    <node name="cylinder_handler" pkg="task_2" type="cylinder_handler.py" output="log" />
 
-    <node name="color_classifier" pkg="task_2" type="color_classifier.py" output="screen" args="$(find task_2)/data/" />
+    <node name="color_classifier" pkg="task_2" type="color_classifier.py" output="log" args="$(find task_2)/data/" />
 
     <!-- <node name=" ring_segmentation" pkg=" task_2" type=" ring_segmentation.py" output=" screen" /> -->
 
