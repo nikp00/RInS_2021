@@ -15,7 +15,7 @@ from actionlib_msgs.msg import GoalID
 from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
-from task_2.msg import CylinderPoseAndColorArray
+from task_2.msg import PoseAndColorArray
 
 
 class Mover:
@@ -25,18 +25,22 @@ class Mover:
 
         self.forward_counter = 0
         self.back_counter = 0
+        self.move_forward = False
+        self.last_turn = None
 
         # Parameters
         self.params = {
-            "replay_waypoints": rospy.get_param("~replay_waypoints"),
-            "rotate_on_replay": rospy.get_param("~rotate_on_replay"),
-            "distance_to_cylinder": 10,
+            "replay_waypoints": rospy.get_param("~replay_waypoints", default=True),
+            "rotate_on_replay": rospy.get_param("~rotate_on_replay", default=False),
+            "distance_to_cylinder": rospy.get_param(
+                "~distance_to_cylinder", default=10
+            ),
         }
 
         # Detected objects data
         self.rings = {"data": PoseArray(), "last_id": 0}
         self.cylinders = {
-            "data": CylinderPoseAndColorArray(),
+            "data": PoseAndColorArray(),
             "last_id": 0,
             "cancel_counter": 0,
         }
@@ -101,7 +105,7 @@ class Mover:
             "/move_base/result", MoveBaseActionResult, self.result_sub_callback
         )
         self.cylinder_sub = rospy.Subscriber(
-            "/cylinder_pose", CylinderPoseAndColorArray, self.cylinder_sub_callback
+            "/cylinder_pose", PoseAndColorArray, self.cylinder_sub_callback
         )
         # self.image_sub = rospy.Subscriber(
         #     "/camera/rgb/image_raw", Image, self.image_callback
@@ -326,80 +330,122 @@ class Mover:
             mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
         )
 
+        left_right = 100
+        top_bottom = 170
+
         if len(countour) > 0:
             depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
             depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
+
+            temp = cv2.bitwise_and(depth_image, depth_image, mask=cv2.bitwise_not(mask))
+            left = np.nanmean(temp[top_bottom:-top_bottom, 0:left_right])
+            right = np.nanmean(
+                temp[top_bottom:-top_bottom, depth_image.shape[1] - left_right :]
+            )
+
             yd = int(depth_image.shape[0] / 2)
             xd = int(depth_image.shape[1] / 2)
             dist = np.nanmean(depth_image[yd - 5 : yd + 5, xd - 5 : xd + 5])
             print()
-            print(dist)
 
             cont = max(countour, key=cv2.contourArea)
             m = cv2.moments(cont)
             cx = int(m["m10"] / m["m00"])
             cy = int(m["m01"] / m["m00"])
-            cv2.circle(image, (cx, cy), 3, (0, 255, 0))
-            cv2.drawContours(image, [cont], -1, (0, 255, 0), 2)
-
+            c_dist = depth_image[cy, cx]
             msg = Twist()
 
-            y = int(image.shape[0] / 2)
-            x = int(image.shape[1] / 2)
-
-            step = 0.08
-            # if abs(cx - x) > 100:
-            # step = 0.08
-            if abs(cx - x) < 10:
-                step = 0.005
-            elif abs(cx - x) < 30:
-                step = 0.01
-            elif abs(cx - x) < 50:
-                step = 0.03
-
-            if self.back_counter == 0:
-                if abs(cx - x) < 2:
-                    if not np.isnan(dist):
-                        if dist > 0.46:
-                            msg.linear.x = 0.05
-                        else:
-                            msg.linear.x = 0.01
-                        print("forward")
-                    elif self.forward_counter < 12:
-                        msg.linear.x = 0.01
-                        self.forward_counter += 1
-                        print("forward manual", self.forward_counter)
-                    elif self.forward_counter < 17:
-                        msg.linear.x = 0.005
-                        self.forward_counter += 1
-                        print("forward manual", self.forward_counter)
+            print("LEft: ", left, ", Right: ", right, ", C_dist: ", c_dist)
+            if (np.isnan(left) or left < 0.5) and c_dist > 0.4:
+                msg.angular.z = -0.2
+                print("Avoid, turn right")
+                self.last_turn = "right"
+                self.move_forward = 5
+            elif (np.isnan(right) or right < 0.5) and c_dist > 0.4:
+                print("Avoid, turn left")
+                msg.angular.z = 0.2
+                self.last_turn = "left"
+                self.move_forward = 5
+            elif self.move_forward > 0:
+                print("Avoid, forward")
+                self.move_forward -= 1
+                if c_dist > 0.5:
+                    msg.linear.x = 0.05
+                else:
+                    self.move_forward = 0
+            elif self.last_turn != None:
+                self.last_turn = None
+                print("Avoid, rotate back")
+                if c_dist > 0.5:
+                    if self.last_turn == "left":
+                        msg.angular.z = -0.5
                     else:
-                        if self.back_counter == 0:
-                            self.arm_control_pub.publish("extend")
-                            rospy.sleep(5)
-                            self.arm_control_pub.publish("retract")
-                            self.back_counter = 1
-                            print("Move arm")
-                else:
-                    if cx > x:
-                        print("Turn right", cx, x, step)
-                        msg.angular.z = -step
-                    elif cy < x:
-                        print("Turn left", cx, x, step)
-                        msg.angular.z = step
+                        msg.angular.z = 0.5
             else:
-                if self.back_counter < 4:
-                    msg.linear.x = -0.2
-                    self.back_counter += 1
-                    print("Back", self.back_counter)
+
+                cv2.circle(image, (cx, cy), 3, (0, 255, 0))
+                cv2.drawContours(image, [cont], -1, (0, 255, 0), 2)
+
+                y = int(image.shape[0] / 2)
+                x = int(image.shape[1] / 2)
+
+                step = 0.08
+                if abs(cx - x) < 10:
+                    step = 0.005
+                elif abs(cx - x) < 30:
+                    step = 0.01
+                elif abs(cx - x) < 50:
+                    step = 0.03
+
+                if self.back_counter == 0:
+                    if abs(cx - x) < 2:
+                        if not np.isnan(dist):
+                            if dist > 0.46:
+                                msg.linear.x = 0.05
+                            else:
+                                msg.linear.x = 0.01
+                            print("forward")
+                        elif self.forward_counter < 12:
+                            msg.linear.x = 0.01
+                            self.forward_counter += 1
+                            print("forward manual", self.forward_counter)
+                        elif self.forward_counter < 17:
+                            msg.linear.x = 0.005
+                            self.forward_counter += 1
+                            print("forward manual", self.forward_counter)
+                        else:
+                            if self.back_counter == 0:
+                                self.arm_control_pub.publish("extend")
+                                rospy.sleep(5)
+                                self.arm_control_pub.publish("retract")
+                                self.back_counter = 1
+                                print("Move arm")
+                    else:
+                        if cx > x:
+                            print("Turn right", cx, x, step)
+                            msg.angular.z = -step
+                        elif cy < x:
+                            print("Turn left", cx, x, step)
+                            msg.angular.z = step
                 else:
-                    self.back_counter = 0
-                    self.forward_counter = 0
-                    self.state["main"] = "return_to_stored_pose"
-                    print("Return")
+                    if self.back_counter < 4:
+                        msg.linear.x = -0.2
+                        self.back_counter += 1
+                        print("Back", self.back_counter)
+                    else:
+                        self.back_counter = 0
+                        self.forward_counter = 0
+                        self.state["main"] = "return_to_stored_pose"
+                        print("Return")
 
             self.twist_pub.publish(msg)
-        self.fine_navigation_img_pub.publish(self.bridge.cv2_to_imgmsg(image))
+        image[top_bottom:-top_bottom, 0:left_right] = (0, 0, 255)
+        image[top_bottom:-top_bottom, image.shape[1] - left_right :] = (0, 0, 255)
+        self.fine_navigation_img_pub.publish(
+            self.bridge.cv2_to_imgmsg(
+                cv2.bitwise_and(image, image, mask=cv2.bitwise_not(mask))
+            )
+        )
 
     def fade_markers(self):
         for e in self.waypoint_markers.markers:

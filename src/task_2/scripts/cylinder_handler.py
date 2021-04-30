@@ -19,7 +19,7 @@ from geometry_msgs.msg import (
     PoseArray,
 )
 from std_msgs.msg import ColorRGBA, Header
-from task_2.msg import CylinderSegmentation, CylinderObject, CylinderPoseAndColorArray
+from task_2.msg import CylinderSegmentation, PoseAndColor, PoseAndColorArray
 
 
 class CylinderHandler:
@@ -42,7 +42,7 @@ class CylinderHandler:
             "cylinder_n_detections_markers", MarkerArray, queue_size=10
         )
         self.cylinder_pose_publisher = rospy.Publisher(
-            "cylinder_pose", CylinderPoseAndColorArray, queue_size=10
+            "cylinder_pose", PoseAndColorArray, queue_size=10
         )
 
         # Services
@@ -157,8 +157,8 @@ class CylinderHandler:
             [e.to_text() for e in self.cylinders]
         )
         self.cylinder_pose_publisher.publish(
-            CylinderPoseAndColorArray(
-                [CylinderObject(e.pose.pose, e.color_name) for e in self.cylinders]
+            PoseAndColorArray(
+                [PoseAndColor(e.pose.pose, e.color_name) for e in self.cylinders]
             )
         )
 

@@ -6,20 +6,30 @@ import cv2
 import numpy as np
 import tf2_geometry_msgs
 import tf2_ros
+from collections import defaultdict
+import copy
+
+
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PointStamped, Vector3, Pose
 from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
+from task_2.msg import PoseAndColor, PoseAndColorArray
+
+from task_2.srv import ColorClassifierService, ColorClassifierServiceRequest
 
 
 class RingSegmentation:
     def __init__(self):
         self.node = rospy.init_node("ring_segmentation", anonymous=True)
+
         self.bridge = CvBridge()
+        self.tf_buf = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
         self.dims = (0, 0, 0)
-        self.ring_markers = MarkerArray()
+        self.rings = list()
         self.seq = 1
 
         self.cv_image = None
@@ -30,18 +40,23 @@ class RingSegmentation:
         #     "/camera/rgb/image_raw", Image, self.image_callback
         # )
 
-        self.depth_image_subscriber = rospy.Subscriber(
-            "/camera/depth/image_raw", Image, self.depth_callback
-        )
-
         self.ring_markers_publisher = rospy.Publisher(
             "ring_markers", MarkerArray, queue_size=10
         )
-
+        self.n_detections_marker_publisher = rospy.Publisher(
+            "ring_n_detections_markers", MarkerArray, queue_size=10
+        )
+        self.ring_pose_publisher = rospy.Publisher(
+            "ring_pose", PoseAndColorArray, queue_size=10
+        )
         self.image_publisher = rospy.Publisher("ring_image", Image, queue_size=10)
 
-        self.tf_buf = tf2_ros.Buffer()
-        self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
+        self.get_color = rospy.ServiceProxy("/color_classifier", ColorClassifierService)
+        rospy.wait_for_service("/color_classifier")
+
+        self.depth_image_subscriber = rospy.Subscriber(
+            "/camera/depth/image_raw", Image, self.depth_callback
+        )
 
         self.run()
 
@@ -50,22 +65,16 @@ class RingSegmentation:
 
         while not rospy.is_shutdown():
             self.find_rings()
-            self.ring_markers_publisher.publish(self.ring_markers)
             r.sleep()
 
     def find_rings(self):
         if not self.new_image:
             return
-        self.new_image = False
 
+        self.new_image = False
         self.dims = self.cv_image.shape
 
-        # gray = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2GRAY)
-
         img = cv2.equalizeHist(self.cv_image)
-
-        # img = self.cv_image
-
         ret, thresh = cv2.threshold(img, 50, 255, cv2.THRESH_BINARY)
 
         contours, hierarchy = cv2.findContours(
@@ -74,8 +83,6 @@ class RingSegmentation:
 
         elps = []
         for cnt in contours:
-            #     print cnt
-            #     print cnt.shape
             if cnt.shape[0] >= 20:
                 ellipse = cv2.fitEllipse(cnt)
                 elps.append(ellipse)
@@ -91,8 +98,6 @@ class RingSegmentation:
                 if dist < 5:
                     candidates.append((e1, e2))
 
-        print("Processing is done! found", len(candidates), "candidates for rings")
-
         skip = True
         for c in candidates:
             e1 = c[0]
@@ -105,7 +110,6 @@ class RingSegmentation:
                 continue
 
             skip = False
-
             x1 = int(center[0] - size / 2)
             x2 = int(center[0] + size / 2)
 
@@ -123,13 +127,10 @@ class RingSegmentation:
             y_min = y1 if y1 > 0 else 0
             y_max = y2 if y2 < self.cv_image.shape[1] else self.cv_image.shape[1]
 
-            # depth_image = self.bridge.imgmsg_to_cv2(depth_image, "16UC1")
-
             cv2.rectangle(self.cv_image, (y_max, x_max), (y_min, x_min), (0, 0, 255), 2)
 
             padding = 0
-
-            self.get_pose(
+            pose = self.get_pose(
                 e1,
                 np.nanmean(
                     np.ma.masked_equal(
@@ -142,73 +143,41 @@ class RingSegmentation:
                 ),
             )
 
-            np.set_printoptions(
-                threshold=sys.maxsize,
-            )
+            try:
+                image = self.bridge.imgmsg_to_cv2(
+                    rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
+                )
+            except CvBridgeError as e:
+                print(e)
 
-            print(
-                "Mean",
-                float(
-                    np.nanmean(
-                        self.depth_image[
-                            x_min - padding : x_max + padding,
-                            y_min - padding : y_max + padding,
-                        ],
-                    )
-                ),
-                float(
-                    np.nanmean(
-                        np.ma.masked_equal(
-                            self.depth_image[
-                                x_min - padding : x_max + padding,
-                                y_min - padding : y_max + padding,
-                            ],
-                            0,
-                        )
-                    )
-                ),
-                np.ma.masked_equal(
-                    self.depth_image[
-                        x_min - padding : x_max + padding,
-                        y_min - padding : y_max + padding,
-                    ],
-                    0,
-                ),
-                self.depth_image[x_min:x_max, y_min:y_max],
-            )
-            print(
-                "Center",
-                float(self.depth_image[int(center[0]), int(center[1])]),
-                center,
-            )
+            m1 = np.zeros(image.shape[0:2], np.uint8)
+            m2 = np.zeros(image.shape[0:2], np.uint8)
+
+            cv2.ellipse(m1, e1, (255, 255, 255), -1)
+            cv2.ellipse(m2, e2, (255, 255, 255), -1)
+            m3 = m2 - m1
+
+            bgr_color = cv2.mean(image, mask=m3)
+            print("bgr", bgr_color)
+
+            req = ColorClassifierServiceRequest()
+            req.mode = 1
+            req.color = ColorRGBA(*[int(e) for e in bgr_color[::-1][1:]], 1)
+            res = self.get_color(req)
+
+            self.add_ring(pose, res)
 
         if not skip and len(candidates) > 0:
             ros_img = self.bridge.cv2_to_imgmsg(self.cv_image)
             self.image_publisher.publish(ros_img)
 
-    def get_pose(self, e, dist):
+    def get_pose(self, e, dist) -> Pose:
         k_f = 525
 
         elipse_x = self.dims[1] / 2 - e[0][0]
         elipse_y = self.dims[0] / 2 - e[0][1]
 
         angle_to_target = np.arctan2(elipse_x, k_f)
-        print(
-            "X angle: ",
-            angle_to_target * (180 / np.pi),
-            ", Y angle: ",
-            np.arctan2(elipse_y, k_f) * (180 / np.pi),
-        )
-
-        print(
-            "Distance: ",
-            dist,
-            ", Fixed dist: ",
-            np.cos(np.arctan2(elipse_y, k_f)) * dist,
-        )
-
-        # dist = np.cos(np.arctan2(elipse_y, k_f)) * dist
-
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
 
         point_s = PointStamped()
@@ -232,8 +201,11 @@ class RingSegmentation:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
+        return pose
+
+    def add_ring(self, pose: Pose, res):
         skip = False
-        for e in self.ring_markers.markers:
+        for e in self.rings:
             if (
                 np.sqrt(
                     np.power(pose.position.x - e.pose.position.x, 2)
@@ -243,38 +215,32 @@ class RingSegmentation:
             ):
                 e.pose.position.x = float((pose.position.x + e.pose.position.x) / 2)
                 e.pose.position.y = float((pose.position.y + e.pose.position.y) / 2)
-                e.color = ColorRGBA(0, 1, 1, 1)
+
+                e.color[
+                    (res.marker_color.r, res.marker_color.g, res.marker_color.b)
+                ] += 1
+
+                e.n_detections += 1
+
                 skip = True
                 break
 
         if not skip:
+            ring = Ring(
+                pose,
+                (res.marker_color.r, res.marker_color.g, res.marker_color.b),
+                res.color,
+                self.seq,
+            )
             self.seq += 1
-            marker = Marker()
-            marker.header.stamp = point_world.header.stamp
-            marker.header.frame_id = point_world.header.frame_id
-            marker.pose = pose
-            marker.type = Marker.CUBE
-            marker.action = Marker.ADD
-            marker.frame_locked = False
-            marker.lifetime = rospy.Duration.from_sec(10)
-            marker.id = self.seq
-            marker.scale = Vector3(0.1, 0.1, 0.1)
-            marker.color = ColorRGBA(0, 1, 0, 1)
-            self.ring_markers.markers.append(marker)
+            self.rings.append(ring)
+            print("New ring", res.marker_color, res.color)
 
-    def image_callback(self, data):
-        try:
-            self.cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-        except CvBridgeError as e:
-            print(e)
-
-        try:
-            self.depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
-            self.depth_image = self.bridge.imgmsg_to_cv2(self.depth_image, "16UC1")
-        except Exception as e:
-            print(e)
-
-        self.new_image = True
+        self.ring_markers_publisher.publish([e.to_marker() for e in self.rings])
+        self.n_detections_marker_publisher.publish([e.to_text() for e in self.rings])
+        self.ring_pose_publisher.publish(
+            PoseAndColorArray([PoseAndColor(e.pose, e.color_name) for e in self.rings])
+        )
 
     def depth_callback(self, data):
         try:
@@ -289,7 +255,59 @@ class RingSegmentation:
 
         self.new_image = True
 
-        self.image_publisher.publish(self.bridge.cv2_to_imgmsg(self.cv_image))
+        # self.image_publisher.publish(self.bridge.cv2_to_imgmsg(self.cv_image))
+
+
+class Ring:
+    def __init__(self, pose: Pose, color: tuple, color_name: str, id: int):
+        self.pose = pose
+        self.color = defaultdict(int)
+        self.color[color] += 1
+        self.id = id
+        self.n_detections = 1
+        self.color_name = color_name
+
+    def to_marker(self):
+        m = Marker()
+        m.header.frame_id = "map"
+        m.header.stamp = rospy.Time.now()
+
+        m.id = self.id
+        m.ns = "ring_marker"
+        m.type = Marker.SPHERE
+        m.action = Marker.ADD
+        m.pose = copy.deepcopy(self.pose)
+        m.pose.position.z = 0.2
+        m.scale.x = 0.3
+        m.scale.y = 0.3
+        m.scale.z = 0.3
+        # m.color = ColorRGBA(*self.color, 1)
+        color = max(self.color, key=self.color.get)
+        color = map(lambda x: x / 255, color)
+        m.color = ColorRGBA(*color, 1)
+
+        m.lifetime = rospy.Duration(0)
+        return m
+
+    def to_text(self):
+        m = Marker()
+        m.header.frame_id = "map"
+        m.header.stamp = rospy.Time.now()
+
+        m.id = self.id
+        m.ns = "ring_n_detections_markers"
+        m.type = Marker.TEXT_VIEW_FACING
+        m.action = Marker.ADD
+        m.pose = copy.deepcopy(self.pose)
+        m.pose.position.z = 1
+        m.scale.x = 0.3
+        m.scale.y = 0.3
+        m.scale.z = 0.3
+        m.color = ColorRGBA(0, 0, 0, 1)
+        m.lifetime = rospy.Duration(0)
+
+        m.text = str(self.n_detections)
+        return m
 
 
 if __name__ == "__main__":

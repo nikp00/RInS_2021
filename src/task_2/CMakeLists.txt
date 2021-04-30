@@ -73,8 +73,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   CylinderSegmentation.msg
-  CylinderObject.msg
-  CylinderPoseAndColorArray.msg
+  PoseAndColor.msg
+  PoseAndColorArray.msg
 )
 
 ## Generate services in the 'srv' folder

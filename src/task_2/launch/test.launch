@@ -18,7 +18,7 @@
 
     <node name="color_classifier" pkg="task_2" type="color_classifier.py" output="log" args="$(find task_2)/data/" />
 
-    <!-- <node name=" ring_segmentation" pkg=" task_2" type=" ring_segmentation.py" output=" screen" /> -->
+    <node name="ring_segmentation" pkg="task_2" type="ring_segmentation.py" output="screen" />
 
 
     <node name="move_arm" pkg="task_2" type="move_arm.py" output="log" />
