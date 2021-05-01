@@ -332,16 +332,33 @@ class Mover:
 
         left_right = 100
         top_bottom = 170
+        min_c_dis = 0.6
 
         if len(countour) > 0:
             depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
             depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
 
-            temp = cv2.bitwise_and(depth_image, depth_image, mask=cv2.bitwise_not(mask))
-            left = np.nanmean(temp[top_bottom:-top_bottom, 0:left_right])
-            right = np.nanmean(
-                temp[top_bottom:-top_bottom, depth_image.shape[1] - left_right :]
-            )
+            # temp = cv2.bitwise_and(depth_image, depth_image, mask=cv2.bitwise_not(mask))
+            temp_left = list()
+            for i in range(top_bottom, depth_image.shape[0] - top_bottom):
+                for j in range(left_right):
+                    if mask[i, j] != 255:
+                        temp_left.append(depth_image[i, j])
+            temp_left = np.array(temp_left)
+
+            temp_right = list()
+            for i in range(top_bottom, depth_image.shape[0] - top_bottom):
+                for j in range(depth_image.shape[1] - left_right, depth_image.shape[1]):
+                    if mask[i, j] != 255:
+                        temp_right.append(depth_image[i, j])
+            temp_right = np.array(temp_right)
+
+            left = np.nanmean(temp_left)
+            right = np.nanmean(temp_right)
+            # left = np.nanmean(temp[top_bottom:-top_bottom, 0:left_right])
+            # right = np.nanmean(
+            #     temp[top_bottom:-top_bottom, depth_image.shape[1] - left_right :]
+            # )
 
             yd = int(depth_image.shape[0] / 2)
             xd = int(depth_image.shape[1] / 2)
@@ -353,30 +370,33 @@ class Mover:
             cx = int(m["m10"] / m["m00"])
             cy = int(m["m01"] / m["m00"])
             c_dist = depth_image[cy, cx]
+
             msg = Twist()
 
             print("LEft: ", left, ", Right: ", right, ", C_dist: ", c_dist)
-            if (np.isnan(left) or left < 0.5) and c_dist > 0.4:
-                msg.angular.z = -0.2
+            # if (np.isnan(left) or left < 0.5) and c_dist > min_c_dis:
+            if (np.isnan(left) or left < 0.5) and c_dist > min_c_dis:
+                msg.angular.z = -0.5
                 print("Avoid, turn right")
                 self.last_turn = "right"
-                self.move_forward = 5
-            elif (np.isnan(right) or right < 0.5) and c_dist > 0.4:
+                self.move_forward = 2
+            # elif (np.isnan(right) or right < 0.5) and c_dist > min_c_dis:
+            elif (np.isnan(right) or right < 0.5) and c_dist > min_c_dis:
                 print("Avoid, turn left")
-                msg.angular.z = 0.2
+                msg.angular.z = 0.5
                 self.last_turn = "left"
-                self.move_forward = 5
+                self.move_forward = 2
             elif self.move_forward > 0:
                 print("Avoid, forward")
                 self.move_forward -= 1
-                if c_dist > 0.5:
-                    msg.linear.x = 0.05
+                if c_dist > min_c_dis:
+                    msg.linear.x = 0.1
                 else:
                     self.move_forward = 0
             elif self.last_turn != None:
                 self.last_turn = None
                 print("Avoid, rotate back")
-                if c_dist > 0.5:
+                if c_dist > min_c_dis:
                     if self.last_turn == "left":
                         msg.angular.z = -0.5
                     else:

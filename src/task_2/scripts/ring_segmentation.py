@@ -36,9 +36,10 @@ class RingSegmentation:
         self.depth_image = None
         self.new_image = False
 
-        # self.image_sub = rospy.Subscriber(
-        #     "/camera/rgb/image_raw", Image, self.image_callback
-        # )
+        self.params = {
+            "invert_image": rospy.get_param("~invert_image", default=True),
+            "equalize_hist": rospy.get_param("~equalize_hist", default=True),
+        }
 
         self.ring_markers_publisher = rospy.Publisher(
             "ring_markers", MarkerArray, queue_size=10
@@ -74,8 +75,16 @@ class RingSegmentation:
         self.new_image = False
         self.dims = self.cv_image.shape
 
-        img = cv2.equalizeHist(self.cv_image)
-        ret, thresh = cv2.threshold(img, 50, 255, cv2.THRESH_BINARY)
+        if self.params["invert_image"]:
+            temp = np.copy(self.depth_image)
+            temp[np.isnan(temp)] = 0
+            mask = cv2.inRange(temp, 0, 0)
+            self.cv_image = cv2.bitwise_or(self.cv_image, mask)
+
+        if self.params["equalize_hist"]:
+            self.cv_image = cv2.equalizeHist(self.cv_image)
+
+        ret, thresh = cv2.threshold(self.cv_image, 50, 255, cv2.THRESH_BINARY)
 
         contours, hierarchy = cv2.findContours(
             thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
@@ -167,9 +176,8 @@ class RingSegmentation:
 
             self.add_ring(pose, res)
 
-        if not skip and len(candidates) > 0:
-            ros_img = self.bridge.cv2_to_imgmsg(self.cv_image)
-            self.image_publisher.publish(ros_img)
+        ros_img = self.bridge.cv2_to_imgmsg(self.cv_image)
+        self.image_publisher.publish(ros_img)
 
     def get_pose(self, e, dist) -> Pose:
         k_f = 525

@@ -643,6 +643,7 @@ Visualization Manager:
         Plane: true
         Ring Image: true
         Ring markers: true
+        Ring n. detections: true
         RobotModel: false
         TF: true
         Value: true
@@ -660,7 +661,7 @@ Visualization Manager:
       Marker Topic: /waypoint_markers
       Name: Navigation waypoints
       Namespaces:
-        waypoints: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -744,7 +745,7 @@ Visualization Manager:
       Marker Topic: /cylinder_markers
       Name: Cylinder markers
       Namespaces:
-        cylinder_marker: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -752,7 +753,7 @@ Visualization Manager:
       Marker Topic: /cylinder_n_detections_markers
       Name: Cylinder n. detections
       Namespaces:
-        cylinder_n_detections_markers: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -772,7 +773,15 @@ Visualization Manager:
       Marker Topic: /ring_markers
       Name: Ring markers
       Namespaces:
-        {}
+        ring_marker: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /ring_n_detections_markers
+      Name: Ring n. detections
+      Namespaces:
+        ring_n_detections_markers: true
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -813,20 +822,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
-      Class: rviz/TopDownOrtho
+      Class: rviz/XYOrbit
+      Distance: 9.714073181152344
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: -0.8469278812408447
+        Y: 0.5745828151702881
+        Z: -3.337860107421875e-06
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 106.48273468017578
+      Pitch: 0.48539799451828003
       Target Frame: <Fixed Frame>
-      X: 1.9915302991867065
-      Y: 1.3147313594818115
+      Yaw: 5.915400981903076
     Saved: ~
 Window Geometry:
   Camera:
