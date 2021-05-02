@@ -6,12 +6,20 @@ import cv2
 import numpy as np
 import tf2_geometry_msgs
 import tf2_ros
+import tf
 from collections import defaultdict
 import copy
 
 
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import PointStamped, Vector3, Pose
+from geometry_msgs.msg import (
+    PointStamped,
+    PoseStamped,
+    Vector3,
+    Pose,
+    Point,
+    Quaternion,
+)
 from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
@@ -37,8 +45,8 @@ class RingSegmentation:
         self.new_image = False
 
         self.params = {
-            "invert_image": rospy.get_param("~invert_image", default=True),
-            "equalize_hist": rospy.get_param("~equalize_hist", default=True),
+            "invert_image": rospy.get_param("~invert_image", default=False),
+            "equalize_hist": rospy.get_param("~equalize_hist", default=False),
         }
 
         self.ring_markers_publisher = rospy.Publisher(
@@ -138,6 +146,12 @@ class RingSegmentation:
 
             cv2.rectangle(self.cv_image, (y_max, x_max), (y_min, x_min), (0, 0, 255), 2)
 
+            try:
+                image_msg = rospy.wait_for_message("/camera/rgb/image_raw", Image)
+                image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
+            except CvBridgeError as e:
+                print(e)
+
             padding = 0
             pose = self.get_pose(
                 e1,
@@ -150,14 +164,8 @@ class RingSegmentation:
                         0,
                     )
                 ),
+                image_msg.header.stamp,
             )
-
-            try:
-                image = self.bridge.imgmsg_to_cv2(
-                    rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
-                )
-            except CvBridgeError as e:
-                print(e)
 
             m1 = np.zeros(image.shape[0:2], np.uint8)
             m2 = np.zeros(image.shape[0:2], np.uint8)
@@ -179,7 +187,7 @@ class RingSegmentation:
         ros_img = self.bridge.cv2_to_imgmsg(self.cv_image)
         self.image_publisher.publish(ros_img)
 
-    def get_pose(self, e, dist) -> Pose:
+    def get_pose(self, e, dist, stamp) -> Pose:
         k_f = 525
 
         elipse_x = self.dims[1] / 2 - e[0][0]
@@ -209,6 +217,47 @@ class RingSegmentation:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
+        base_pose = self.get_current_pose(stamp)
+        angle = tf.transformations.euler_from_quaternion(
+            [
+                base_pose.pose.orientation.x,
+                base_pose.pose.orientation.y,
+                base_pose.pose.orientation.z,
+                base_pose.pose.orientation.w,
+            ]
+        )[2]
+
+        angle = np.arctan2(
+            base_pose.pose.position.y - pose.position.y,
+            base_pose.pose.position.x - pose.position.x,
+        )
+
+        pose.orientation = Quaternion(
+            *list(tf.transformations.quaternion_from_euler(0, 0, angle))
+        )
+
+        return pose
+
+    def get_current_pose(self, time):
+        pose_translation = None
+        while pose_translation is None:
+            try:
+                pose_translation = self.tf_buf.lookup_transform(
+                    "map", "base_link", time, rospy.Duration(2)
+                )
+            except Exception as e:
+                print(e)
+
+        pose = PoseStamped()
+        pose.header.seq = 0
+        pose.header.stamp = rospy.Time.now()
+        pose.header.frame_id = "map"
+        pose.pose.position = Point(
+            pose_translation.transform.translation.x,
+            pose_translation.transform.translation.y,
+            0,
+        )
+        pose.pose.orientation = pose_translation.transform.rotation
         return pose
 
     def add_ring(self, pose: Pose, res):
@@ -247,7 +296,9 @@ class RingSegmentation:
         self.ring_markers_publisher.publish([e.to_marker() for e in self.rings])
         self.n_detections_marker_publisher.publish([e.to_text() for e in self.rings])
         self.ring_pose_publisher.publish(
-            PoseAndColorArray([PoseAndColor(e.pose, e.color_name) for e in self.rings])
+            PoseAndColorArray(
+                [PoseAndColor(e.to_pose(), e.color_name) for e in self.rings]
+            )
         )
 
     def depth_callback(self, data):
@@ -274,6 +325,7 @@ class Ring:
         self.id = id
         self.n_detections = 1
         self.color_name = color_name
+        # self.pose.orientation = Quaternion(0, 0, 0, 1)
 
     def to_marker(self):
         m = Marker()
@@ -316,6 +368,11 @@ class Ring:
 
         m.text = str(self.n_detections)
         return m
+
+    def to_pose(self):
+        pose = copy.deepcopy(self.pose)
+        pose.position.z = 0
+        return pose
 
 
 if __name__ == "__main__":
