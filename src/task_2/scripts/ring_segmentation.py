@@ -44,6 +44,8 @@ class RingSegmentation:
         self.depth_image = None
         self.new_image = False
 
+        self.sent_ids = list()
+
         self.params = {
             "invert_image": rospy.get_param("~invert_image", default=False),
             "equalize_hist": rospy.get_param("~equalize_hist", default=False),
@@ -295,8 +297,22 @@ class RingSegmentation:
 
         self.ring_markers_publisher.publish([e.to_marker() for e in self.rings])
         self.n_detections_marker_publisher.publish([e.to_text() for e in self.rings])
+
+        poses = list()
+
+        for e in self.sent_ids:
+            for x in self.rings:
+                if x.id == e:
+                    poses.append(PoseAndColor(x.to_pose(), x.color_name))
+
+        for e in self.rings:
+            if e.id not in self.sent_ids and e.n_detections > 1:
+                poses.append(PoseAndColor(e.to_pose(), e.color_name))
+                self.sent_ids.append(e.id)
+
         self.ring_pose_publisher.publish(
             PoseAndColorArray(
+                # poses
                 [PoseAndColor(e.to_pose(), e.color_name) for e in self.rings]
             )
         )

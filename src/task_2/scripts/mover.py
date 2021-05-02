@@ -16,6 +16,7 @@ from sensor_msgs.msg import Image
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from task_2.msg import PoseAndColorArray
+from task_1.srv import TextToSpeechService, TextToSpeechServiceResponse
 
 
 class Mover:
@@ -112,6 +113,8 @@ class Mover:
 
         # Services
         self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
+        rospy.wait_for_service("text_to_speech")
+        self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
 
         # Subscribers
         self.result_sub = rospy.Subscriber(
@@ -123,9 +126,6 @@ class Mover:
         self.ring_sub = rospy.Subscriber(
             "/ring_pose", PoseAndColorArray, self.ring_sub_callback
         )
-        # self.image_sub = rospy.Subscriber(
-        #     "/camera/rgb/image_raw", Image, self.image_callback
-        # )
         print(self.params)
         self.run()
 
@@ -367,6 +367,22 @@ class Mover:
             depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
             depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
 
+            y = int(image.shape[0] / 2)
+            x = int(image.shape[1] / 2)
+
+            yd = int(depth_image.shape[0] / 2)
+            xd = int(depth_image.shape[1] / 2)
+            dist = np.nanmean(depth_image[yd - 5 : yd + 5, xd - 5 : xd + 5])
+
+            cont = max(countour, key=cv2.contourArea)
+            m = cv2.moments(cont)
+            cx = int(m["m10"] / m["m00"])
+            cy = int(m["m01"] / m["m00"])
+            c_dist = depth_image[cy, cx]
+
+            cv2.circle(image, (cx, cy), 3, (0, 255, 0))
+            cv2.drawContours(image, [cont], -1, (0, 255, 0), 2)
+
             # Compute the distance to the left and right side while ignoring the detected cylinder
             temp_left = list()
             for i in range(
@@ -394,74 +410,60 @@ class Mover:
             left = np.nanmean(temp_left)
             right = np.nanmean(temp_right)
 
-            yd = int(depth_image.shape[0] / 2)
-            xd = int(depth_image.shape[1] / 2)
-            dist = np.nanmean(depth_image[yd - 5 : yd + 5, xd - 5 : xd + 5])
-
-            cont = max(countour, key=cv2.contourArea)
-            m = cv2.moments(cont)
-            cx = int(m["m10"] / m["m00"])
-            cy = int(m["m01"] / m["m00"])
-            c_dist = depth_image[cy, cx]
-
             msg = Twist()
 
-            print("LEft: ", left, ", Right: ", right, ", C_dist: ", c_dist)
-            if (np.isnan(left) or left < 0.5) and c_dist > self.params[
-                "cylinder_detection_min_dis"
-            ]:
-                msg.angular.z = -0.5
-                print("Avoid, turn right")
-                self.last_turn = "right"
-                self.move_forward = 2
-            elif (np.isnan(right) or right < 0.5) and c_dist > self.params[
-                "cylinder_detection_min_dis"
-            ]:
-                print("Avoid, turn left")
-                msg.angular.z = 0.5
-                self.last_turn = "left"
-                self.move_forward = 2
-            elif self.move_forward > 0:
-                self.move_forward -= 1
-                if c_dist > self.params["cylinder_detection_min_dis"]:
-                    print("Avoid, forward")
-                    msg.linear.x = 0.2
-                elif c_dist > 0.5:
-                    print("Avoid, forward")
-                    msg.linear.x = 0.05
-                elif c_dist > 0.4:
-                    print("Avoid, forward")
-                    msg.linear.x = 0.01
-                else:
-                    self.move_forward = 0
-            elif self.last_turn != None:
-                self.last_turn = None
-                print("Avoid, rotate back")
-                if c_dist > self.params["cylinder_detection_min_dis"]:
-                    if self.last_turn == "left":
-                        msg.angular.z = -0.5
+            if not self.goal_reached:
+                if (np.isnan(left) or left < 0.5) and c_dist > self.params[
+                    "cylinder_detection_min_dis"
+                ]:
+                    msg.angular.z = -0.5
+                    self.last_turn = "right"
+                    self.move_forward = 1
+                    print("Avoid, turn right")
+                elif (np.isnan(right) or right < 0.5) and c_dist > self.params[
+                    "cylinder_detection_min_dis"
+                ]:
+                    msg.angular.z = 0.5
+                    self.last_turn = "left"
+                    self.move_forward = 1
+                    print("Avoid, turn left")
+                elif self.move_forward > 0:
+                    self.move_forward -= 1
+                    if c_dist > self.params["cylinder_detection_min_dis"]:
+                        print("Avoid, forward")
+                        msg.linear.x = 0.2
+                    elif c_dist > 0.5:
+                        print("Avoid, forward")
+                        msg.linear.x = 0.05
+                    elif c_dist > 0.4:
+                        print("Avoid, forward")
+                        msg.linear.x = 0.01
                     else:
-                        msg.angular.z = 0.5
-            else:
-                cv2.circle(image, (cx, cy), 3, (0, 255, 0))
-                cv2.drawContours(image, [cont], -1, (0, 255, 0), 2)
+                        self.move_forward = 0
+                elif self.last_turn != None:
+                    self.last_turn = None
+                    print("Avoid, rotate back")
+                    if c_dist > self.params["cylinder_detection_min_dis"]:
+                        if self.last_turn == "left":
+                            msg.angular.z = -0.5
+                        else:
+                            msg.angular.z = 0.5
+                else:
+                    # Set rotation step
+                    step = 0.15
+                    if abs(cx - x) < 5:
+                        step = 0.005
+                    elif abs(cx - x) < 20:
+                        step = 0.01
+                    elif abs(cx - x) < 30:
+                        step = 0.03
+                    elif abs(cx - x) < 50:
+                        step = 0.1
 
-                y = int(image.shape[0] / 2)
-                x = int(image.shape[1] / 2)
-
-                step = 0.08
-                if abs(cx - x) < 10:
-                    step = 0.005
-                elif abs(cx - x) < 30:
-                    step = 0.01
-                elif abs(cx - x) < 50:
-                    step = 0.03
-
-                if self.back_counter == 0:
                     if abs(cx - x) < 2:
                         if not np.isnan(dist):
                             if dist > 0.46:
-                                msg.linear.x = 0.05
+                                msg.linear.x = 0.1
                             else:
                                 msg.linear.x = 0.01
                             print("forward")
@@ -474,12 +476,13 @@ class Mover:
                             self.forward_counter += 1
                             print("forward manual", self.forward_counter)
                         else:
-                            if self.back_counter == 0:
-                                self.arm_control_pub.publish("extend")
-                                rospy.sleep(5)
-                                self.arm_control_pub.publish("retract")
-                                self.back_counter = 1
-                                print("Move arm")
+                            self.arm_control_pub.publish("extend")
+                            self.speak(f"Im near the {color} cylinder.")
+                            rospy.sleep(5)
+                            self.arm_control_pub.publish("retract")
+                            self.goal_reached = True
+                            self.back_counter = 2
+                            print("Move arm")
                     else:
                         if cx > x:
                             print("Turn right", cx, x, step)
@@ -487,16 +490,18 @@ class Mover:
                         elif cy < x:
                             print("Turn left", cx, x, step)
                             msg.angular.z = step
+            else:
+                if self.back_counter > 0:
+                    msg.linear.x = -0.2
+                    self.back_counter -= 1
+                    print("Back", self.back_counter)
                 else:
-                    if self.back_counter < 4:
-                        msg.linear.x = -0.2
-                        self.back_counter += 1
-                        print("Back", self.back_counter)
-                    else:
-                        self.back_counter = 0
-                        self.forward_counter = 0
-                        self.state["main"] = "return_to_stored_pose"
-                        print("Return")
+                    self.forward_counter = 0
+                    self.move_forward = 0
+                    self.last_turn = None
+                    self.goal_reached = False
+                    self.state["main"] = "return_to_stored_pose"
+                    print("Return")
 
             self.twist_pub.publish(msg)
         image[
@@ -566,6 +571,7 @@ class Mover:
         current_pose = self.get_current_pose()
 
         ring = self.rings["data"].data[self.rings["last_id"] - 1].pose
+        color = self.rings["data"].data[self.rings["last_id"] - 1].color
 
         dist = math.sqrt(
             pow((current_pose.pose.position.x - ring.position.x), 2)
@@ -598,14 +604,14 @@ class Mover:
         )
 
         if not self.goal_reached:
-            if (np.isnan(left) or left < 0.45) and dist > 0.2:
+            if (np.isnan(left) or left < 0.45) and dist > 0.26:
                 self.move_forward = 1
-                msg.angular.z = -0.5
-                self.last_turn = "left"
-                print("Avoid, turn right")
-            elif (np.isnan(right) or right < 0.45) and dist > 0.2:
-                msg.angular.z = 0.5
+                msg.angular.z = -0.9
                 self.last_turn = "right"
+                print("Avoid, turn right")
+            elif (np.isnan(right) or right < 0.45) and dist > 0.26:
+                msg.angular.z = 0.9
+                self.last_turn = "left"
                 self.move_forward = 1
                 print("Avoid, turn left")
             elif self.move_forward > 0:
@@ -638,16 +644,26 @@ class Mover:
                     elif angle < target_angle:
                         print("Rotate plus")
                         msg.angular.z = 0.2
+                elif abs(target_angle - angle) > (math.pi / 180) * 2:
+                    if angle > target_angle:
+                        msg.angular.z = -0.05
+                        print("Rotate minus")
+                    elif angle < target_angle:
+                        print("Rotate plus")
+                        msg.angular.z = 0.05
                 else:
                     print("Move forward")
                     if dist > 0.5:
-                        msg.linear.x = 0.05
+                        msg.linear.x = 0.1
                     elif dist > 0.4:
-                        msg.linear.x = 0.02
-                    elif dist > 0.08:
+                        msg.linear.x = 0.05
+                    elif dist > 0.2:
+                        msg.linear.x = 0.03
+                    elif dist > 0.09:
                         msg.linear.x = 0.01
                     else:
                         print("Under ring")
+                        self.speak(f"Im under the {color} ring.")
                         rospy.sleep(5)
                         self.goal_reached = True
                         self.back_counter = 4
@@ -657,6 +673,7 @@ class Mover:
                 msg.linear.x = -0.2
                 print("Back", self.back_counter)
             else:
+                self.forward_counter = 0
                 self.move_forward = 0
                 self.last_turn = None
                 self.goal_reached = False

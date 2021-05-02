@@ -54,7 +54,7 @@
         <collision name='classroom_collision'>
           <geometry>
             <mesh>
-              <uri>model://simulation_envoirment/meshes/rins_task2_p2.dae</uri>
+              <uri>model://simulation_envoirment/meshes/rins_task2_p1.dae</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -75,7 +75,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>model://simulation_envoirment/meshes/rins_task2_p2.dae</uri>
+              <uri>model://simulation_envoirment/meshes/rins_task2_p1.dae</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>

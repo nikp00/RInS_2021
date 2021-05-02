@@ -1,1 +1,1 @@
-task_2/PoseAndColor[] cylinders
+task_2/PoseAndColor[] data
