@@ -30,6 +30,7 @@ class CylinderHandler:
 
         self.cylinders = list()
         self.seq = 1
+        self.sent_ids = list()
 
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
@@ -156,9 +157,23 @@ class CylinderHandler:
         self.n_detections_marker_publisher.publish(
             [e.to_text() for e in self.cylinders]
         )
+
+        poses = list()
+
+        for e in self.sent_ids:
+            for x in self.cylinders:
+                if x.id == e:
+                    poses.append(PoseAndColor(x.pose.pose, x.color_name))
+
+        for e in self.cylinders:
+            if e.id not in self.sent_ids and e.n_detections > 1:
+                poses.append(PoseAndColor(e.pose.pose, e.color_name))
+                self.sent_ids.append(e.id)
+
         self.cylinder_pose_publisher.publish(
             PoseAndColorArray(
-                [PoseAndColor(e.pose.pose, e.color_name) for e in self.cylinders]
+                poses
+                # [PoseAndColor(e.pose.pose, e.color_name) for e in self.cylinders]
             )
         )
 
@@ -231,10 +246,13 @@ class Cylinder:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        # m.color = ColorRGBA(*self.color, 1)
         color = max(self.color, key=self.color.get)
         color = map(lambda x: x / 255, color)
-        m.color = ColorRGBA(*color, 1)
+
+        if self.n_detections > 1:
+            m.color = ColorRGBA(*color, 1)
+        else:
+            m.color = ColorRGBA(*color, 0.3)
 
         m.lifetime = rospy.Duration(0)
         return m
@@ -253,7 +271,10 @@ class Cylinder:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        m.color = ColorRGBA(0, 0, 0, 1)
+        if self.n_detections > 1:
+            m.color = ColorRGBA(0, 0, 0, 1)
+        else:
+            m.color = ColorRGBA(255, 0, 0, 1)
         m.lifetime = rospy.Duration(0)
 
         m.text = str(self.n_detections)

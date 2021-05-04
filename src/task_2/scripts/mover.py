@@ -603,64 +603,81 @@ class Mover:
             f"Distance: {dist}, angle: {(angle/math.pi)*180}, target angle: {(target_angle/math.pi)*180}, left: {left}, right: {right}"
         )
 
+        # increment distance to 3.xxx
+        avoid_rotation_step = 0.9
         if not self.goal_reached:
-            if (np.isnan(left) or left < 0.45) and dist > 0.26:
+            if ((np.isnan(left) or left < 0.45) and dist > 0.3) and (
+                not (np.isnan(left) or np.isnan(right)) or abs(left - right) > 0.2
+            ):
                 self.move_forward = 1
-                msg.angular.z = -0.9
+                msg.angular.z = -avoid_rotation_step
                 self.last_turn = "right"
-                print("Avoid, turn right")
-            elif (np.isnan(right) or right < 0.45) and dist > 0.26:
-                msg.angular.z = 0.9
+                print(f"Avoid, turn right (speed: {avoid_rotation_step})")
+            elif ((np.isnan(right) or right < 0.45) and dist > 0.3) and (
+                not (np.isnan(left) or np.isnan(right)) or abs(left - right) > 0.2
+            ):
+                msg.angular.z = avoid_rotation_step
                 self.last_turn = "left"
                 self.move_forward = 1
-                print("Avoid, turn left")
-            elif self.move_forward > 0:
+                print(f"Avoid, turn left (speed: {avoid_rotation_step})")
+            elif (self.move_forward > 0 and dist > 0.3) and (
+                not (np.isnan(left) or np.isnan(right)) or abs(left - right) > 0.2
+            ):
                 self.move_forward -= 1
-                if dist > 0.2:
+                if dist > 0.3:
+                    msg.linear.x = 0.3
+                    print(f"Avoid, move forward (speed: 0.5)")
+                elif dist > 0.2:
                     msg.linear.x = 0.1
-                    print("Avoid, forward")
+                    print(f"Avoid, move forward (speed: 0.1)")
                 else:
                     self.move_forward = 0
-            elif self.last_turn != None:
+            elif (self.last_turn != None) and (
+                not (np.isnan(left) or np.isnan(right)) or abs(left - right) > 0.2
+            ):
                 self.last_turn = None
                 if dist > 0.4:
-                    print("Avoid, rotate back")
                     if self.last_turn == "left":
-                        msg.angular.z = -0.5
+                        msg.angular.z = -0.2
+                        print("Avoid, rotate back right (speed: 0.2)")
                     else:
-                        msg.angular.z = 0.5
+                        msg.angular.z = 0.2
+                        print("Avoid, rotate back left (speed: 0.2)")
             else:
                 if abs(target_angle - angle) > (math.pi / 180) * 10:
                     if angle > target_angle:
                         msg.angular.z = -0.4
-                        print("Rotate minus")
+                        print("Rotate right (speed: 0.4)")
                     elif angle < target_angle:
-                        print("Rotate plus")
                         msg.angular.z = 0.4
+                        print("Rotate left (speed: 0.4)")
                 elif abs(target_angle - angle) > (math.pi / 180) * 5:
                     if angle > target_angle:
                         msg.angular.z = -0.2
-                        print("Rotate minus")
+                        print("Rotate right (speed: 0.2)")
                     elif angle < target_angle:
-                        print("Rotate plus")
                         msg.angular.z = 0.2
+                        print("Rotate left (speed: 0.2)")
                 elif abs(target_angle - angle) > (math.pi / 180) * 2:
                     if angle > target_angle:
                         msg.angular.z = -0.05
-                        print("Rotate minus")
+                        print("Rotate right (speed: 0.05)")
                     elif angle < target_angle:
-                        print("Rotate plus")
                         msg.angular.z = 0.05
+                        print("Rotate left (speed: 0.05)")
                 else:
-                    print("Move forward")
                     if dist > 0.5:
                         msg.linear.x = 0.1
+                        print("Move forward (speed: 0.1)")
                     elif dist > 0.4:
                         msg.linear.x = 0.05
+                        print("Move forward (speed: 0.05)")
                     elif dist > 0.2:
                         msg.linear.x = 0.03
-                    elif dist > 0.09:
+                        print("Move forward (speed: 0.03)")
+                    elif dist > 0.1:
                         msg.linear.x = 0.01
+                        print("Move forward (speed: 0.01)")
                     else:
                         print("Under ring")
                         self.speak(f"Im under the {color} ring.")

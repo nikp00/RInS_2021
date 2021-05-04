@@ -154,21 +154,6 @@ class RingSegmentation:
             except CvBridgeError as e:
                 print(e)
 
-            padding = 0
-            pose = self.get_pose(
-                e1,
-                np.nanmean(
-                    np.ma.masked_equal(
-                        self.depth_image[
-                            x_min - padding : x_max + padding,
-                            y_min - padding : y_max + padding,
-                        ],
-                        0,
-                    )
-                ),
-                image_msg.header.stamp,
-            )
-
             m1 = np.zeros(image.shape[0:2], np.uint8)
             m2 = np.zeros(image.shape[0:2], np.uint8)
 
@@ -176,8 +161,27 @@ class RingSegmentation:
             cv2.ellipse(m2, e2, (255, 255, 255), -1)
             m3 = m2 - m1
 
+            padding = 0
+            np.set_printoptions(threshold=np.inf, precision=2)
+
+            temp = cv2.bitwise_and(self.depth_image, self.depth_image, mask=m3)
+            temp[temp == 0] = np.nan
+            pose = self.get_pose(
+                e1,
+                np.nanmean(
+                    temp
+                    # np.ma.masked_equal(
+                    #     self.depth_image[
+                    #         x_min - padding : x_max + padding,
+                    #         y_min - padding : y_max + padding,
+                    #     ],
+                    #     0,
+                    # )
+                ),
+                image_msg.header.stamp,
+            )
+
             bgr_color = cv2.mean(image, mask=m3)
-            print("bgr", bgr_color)
 
             req = ColorClassifierServiceRequest()
             req.mode = 1
@@ -196,6 +200,9 @@ class RingSegmentation:
         elipse_y = self.dims[0] / 2 - e[0][1]
 
         angle_to_target = np.arctan2(elipse_x, k_f)
+
+        dist = np.cos(np.arctan2(elipse_y, k_f)) * dist
+
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
 
         point_s = PointStamped()
@@ -293,7 +300,6 @@ class RingSegmentation:
             )
             self.seq += 1
             self.rings.append(ring)
-            print("New ring", res.marker_color, res.color)
 
         self.ring_markers_publisher.publish([e.to_marker() for e in self.rings])
         self.n_detections_marker_publisher.publish([e.to_text() for e in self.rings])
@@ -312,8 +318,8 @@ class RingSegmentation:
 
         self.ring_pose_publisher.publish(
             PoseAndColorArray(
-                # poses
-                [PoseAndColor(e.to_pose(), e.color_name) for e in self.rings]
+                poses
+                # [PoseAndColor(e.to_pose(), e.color_name) for e in self.rings]
             )
         )
 
@@ -357,10 +363,12 @@ class Ring:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        # m.color = ColorRGBA(*self.color, 1)
         color = max(self.color, key=self.color.get)
         color = map(lambda x: x / 255, color)
-        m.color = ColorRGBA(*color, 1)
+        if self.n_detections > 1:
+            m.color = ColorRGBA(*color, 1)
+        else:
+            m.color = ColorRGBA(*color, 0.3)
 
         m.lifetime = rospy.Duration(0)
         return m
@@ -379,7 +387,10 @@ class Ring:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        m.color = ColorRGBA(0, 0, 0, 1)
+        if self.n_detections > 1:
+            m.color = ColorRGBA(0, 0, 0, 1)
+        else:
+            m.color = ColorRGBA(255, 0, 0, 1)
         m.lifetime = rospy.Duration(0)
 
         m.text = str(self.n_detections)

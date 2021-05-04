@@ -94,7 +94,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
         seg.setInputCloud(cloud_filtered);
         seg.setInputNormals(cloud_normals);
         // Obtain the plane inliers and coefficients
-        seg.segment(*inliers_plane, *coefficients_plane);
+        (void)seg.segment(*inliers_plane, *coefficients_plane);
 
         // Remove the planar inliers, extract the rest
         extract.setInputCloud(cloud_filtered);
@@ -134,7 +134,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
     seg.setInputNormals(cloud_normals);
 
     // Obtain the cylinder inliers and coefficients
-    seg.segment(*inliers_cylinder, *coefficients_cylinder);
+    (void)seg.segment(*inliers_cylinder, *coefficients_cylinder);
 
     extract.setInputCloud(cloud_filtered);
     extract.setIndices(inliers_cylinder);
