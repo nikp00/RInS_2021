@@ -125,15 +125,18 @@ class CylinderHandler:
                 )
                 < 0.5
             ):
-                e.pose.pose.position.x = float(
-                    (e.pose.pose.position.x + pose.pose.position.x) / 2
-                )
-                e.pose.pose.position.y = float(
-                    (e.pose.pose.position.y + pose.pose.position.y) / 2
-                )
-                e.pose.pose.position.z = float(
-                    (e.pose.pose.position.z + pose.pose.position.z) / 2
-                )
+                # e.pose.pose.position.x = float(
+                #     (e.pose.pose.position.x + pose.pose.position.x) / 2
+                # )
+                # e.pose.pose.position.y = float(
+                #     (e.pose.pose.position.y + pose.pose.position.y) / 2
+                # )
+                # e.pose.pose.position.z = float(
+                #     (e.pose.pose.position.z + pose.pose.position.z) / 2
+                # )
+                e.x.append(pose.pose.position.x)
+                e.y.append(pose.pose.position.y)
+                e.calculate_pose()
 
                 e.color[
                     (res.marker_color.r, res.marker_color.g, res.marker_color.b)
@@ -226,6 +229,8 @@ class Cylinder:
     def __init__(self, pose: PoseStamped, color: tuple, color_name: str, id: int):
         self.pose = pose
         # self.color = Cylinder.colors["yellow"]  # color
+        self.x = [pose.pose.position.x]
+        self.y = [pose.pose.position.y]
         self.color = defaultdict(int)
         self.color[color] += 1
         self.id = id
@@ -279,6 +284,10 @@ class Cylinder:
 
         m.text = str(self.n_detections)
         return m
+
+    def calculate_pose(self):
+        self.pose.pose.position.x = np.mean(self.x)
+        self.pose.pose.position.y = np.mean(self.y)
 
 
 if __name__ == "__main__":

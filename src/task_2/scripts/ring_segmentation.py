@@ -24,6 +24,8 @@ from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
 from task_2.msg import PoseAndColor, PoseAndColorArray
+from nav_msgs.msg import OccupancyGrid
+
 
 from task_2.srv import ColorClassifierService, ColorClassifierServiceRequest
 
@@ -62,13 +64,16 @@ class RingSegmentation:
         )
         self.image_publisher = rospy.Publisher("ring_image", Image, queue_size=10)
 
-        self.get_color = rospy.ServiceProxy("/color_classifier", ColorClassifierService)
         rospy.wait_for_service("/color_classifier")
+        self.get_color = rospy.ServiceProxy("/color_classifier", ColorClassifierService)
+
+        self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
 
         self.depth_image_subscriber = rospy.Subscriber(
             "/camera/depth/image_raw", Image, self.depth_callback
         )
 
+        self.occupancy_grid_to_img()
         self.run()
 
     def run(self):
@@ -77,6 +82,14 @@ class RingSegmentation:
         while not rospy.is_shutdown():
             self.find_rings()
             r.sleep()
+
+    def occupancy_grid_to_img(self):
+        self.map = np.flip(
+            np.array([[e, e, e] for e in self.map_msg.data], dtype=np.uint8).reshape(
+                (self.map_msg.info.height, self.map_msg.info.width, 3)
+            ),
+            axis=0,
+        )
 
     def find_rings(self):
         if not self.new_image:
@@ -201,7 +214,8 @@ class RingSegmentation:
 
         angle_to_target = np.arctan2(elipse_x, k_f)
 
-        dist = np.cos(np.arctan2(elipse_y, k_f)) * dist
+        # dist = np.cos(np.arctan2(elipse_y, k_f)) * dist
+        # dist = np.sqrt(dist ** 2 - 0.71 ** 2)
 
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
 
@@ -279,9 +293,11 @@ class RingSegmentation:
                 )
                 < 0.5
             ):
-                e.pose.position.x = float((pose.position.x + e.pose.position.x) / 2)
-                e.pose.position.y = float((pose.position.y + e.pose.position.y) / 2)
-
+                # e.pose.position.x = float((pose.position.x + e.pose.position.x) / 2)
+                # e.pose.position.y = float((pose.position.y + e.pose.position.y) / 2)
+                e.x.append(pose.position.x)
+                e.y.append(pose.position.y)
+                e.calculate_pose()
                 e.color[
                     (res.marker_color.r, res.marker_color.g, res.marker_color.b)
                 ] += 1
@@ -316,6 +332,21 @@ class RingSegmentation:
                 poses.append(PoseAndColor(e.to_pose(), e.color_name))
                 self.sent_ids.append(e.id)
 
+        for e in poses:
+            mx = e.pose.position.x
+            my = e.pose.position.y
+
+            gx = int(
+                (mx - self.map_msg.info.origin.position.x)
+                / self.map_msg.info.resolution
+            )
+            gy = int(
+                (my - self.map_msg.info.origin.position.y)
+                / self.map_msg.info.resolution
+            )
+
+            print(mx, my, gx, gy, self.map[gy, gx])
+        print()
         self.ring_pose_publisher.publish(
             PoseAndColorArray(
                 poses
@@ -342,6 +373,8 @@ class RingSegmentation:
 class Ring:
     def __init__(self, pose: Pose, color: tuple, color_name: str, id: int):
         self.pose = pose
+        self.x = [pose.position.x]
+        self.y = [pose.position.y]
         self.color = defaultdict(int)
         self.color[color] += 1
         self.id = id
@@ -400,6 +433,10 @@ class Ring:
         pose = copy.deepcopy(self.pose)
         pose.position.z = 0
         return pose
+
+    def calculate_pose(self):
+        self.pose.position.x = np.mean(self.x)
+        self.pose.position.y = np.mean(self.y)
 
 
 if __name__ == "__main__":
