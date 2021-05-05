@@ -17,6 +17,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from task_2.msg import PoseAndColorArray
 from task_1.srv import TextToSpeechService, TextToSpeechServiceResponse
+from kobuki_msgs.msg import BumperEvent
 
 
 class Mover:
@@ -25,20 +26,23 @@ class Mover:
         self.bridge = CvBridge()
 
         self.forward_counter = 0
-        self.back_counter = 0
+        self.back_counter = None
         self.move_forward = False
         self.last_turn = None
 
         self.ring_orientation = None
         self.goal_reached = False
+        self.last_distance = None
+        self.ring_default_distance = 0.09
+        self.ring_target_distance = 0.07
+        self.bumper_hit = False
+        self.bumper_hit_counter = 0
 
         # Parameters
         self.params = {
             "replay_waypoints": rospy.get_param("~replay_waypoints", default=True),
             "rotate_on_replay": rospy.get_param("~rotate_on_replay", default=False),
-            "distance_to_cylinder": rospy.get_param(
-                "~distance_to_cylinder", default=10
-            ),
+            "distance_to_cylinder": rospy.get_param("~distance_to_cylinder", default=7),
             "distance_to_ring": rospy.get_param("~distance_to_ring", default=10),
             "horizontal_space": rospy.get_param("~horizontal_space", default=100),
             "vertical_space": rospy.get_param("~vertical_space", default=170),
@@ -126,6 +130,9 @@ class Mover:
         self.ring_sub = rospy.Subscriber(
             "/ring_pose", PoseAndColorArray, self.ring_sub_callback
         )
+        self.bumper_sub = rospy.Subscriber(
+            "/mobile_base/events/bumper", BumperEvent, self.bumper_callback
+        )
         print(self.params)
         self.run()
 
@@ -141,13 +148,25 @@ class Mover:
             self.waypoint_markers_pub.publish(self.waypoint_markers)
 
             if (
-                self.state["main"] in ("get_next_waypoint", "moving_to_waypoint")
+                self.state["main"]
+                in (
+                    "get_next_waypoint",
+                    "moving_to_waypoint",
+                    "return_home",
+                    "end",
+                )
                 and len(self.cylinders["data"].data) > self.cylinders["last_id"]
             ):
                 print("Cylinder")
                 self.state["main"] = "move_to_cylinder"
             elif (
-                self.state["main"] in ("get_next_waypoint", "moving_to_waypoint")
+                self.state["main"]
+                in (
+                    "get_next_waypoint",
+                    "moving_to_waypoint",
+                    "return_home",
+                    "end",
+                )
                 and len(self.rings["data"].data) > self.rings["last_id"]
             ):
                 print("Ring")
@@ -189,6 +208,7 @@ class Mover:
                     self.waypoints.poses.append(last_waypoint)
                 if len(self.waypoint_markers.markers) > 0:
                     self.waypoint_markers.markers.pop()
+                self.fade_markers()
                 cylinder = self.cylinders["data"].data[self.cylinders["last_id"]].pose
                 self.cylinders["last_id"] += 1
                 self.move_to_cylinder(cylinder, self.params["distance_to_cylinder"])
@@ -205,6 +225,7 @@ class Mover:
                     self.waypoints.poses.append(last_waypoint)
                 if len(self.waypoint_markers.markers) > 0:
                     self.waypoint_markers.markers.pop()
+                self.fade_markers()
                 ring = self.rings["data"].data[self.rings["last_id"]].pose
                 self.rings["last_id"] += 1
                 self.move_to_ring(ring, self.params["distance_to_ring"])
@@ -508,7 +529,7 @@ class Mover:
                             rospy.sleep(5)
                             self.arm_control_pub.publish("retract")
                             self.goal_reached = True
-                            self.back_counter = 3
+                            self.back_counter = 2
                     else:
                         if cx > x:
                             print(f"Turn right (speed: {step})")
@@ -526,6 +547,7 @@ class Mover:
                     self.move_forward = 0
                     self.last_turn = None
                     self.goal_reached = False
+                    self.back_counter = None
                     self.state["main"] = "return_to_stored_pose"
                     print("Return to stored pose")
 
@@ -622,20 +644,39 @@ class Mover:
         msg = Twist()
 
         print(
-            f"Distance: {dist:.4}, angle: {((angle/math.pi)*180):.4}, target angle: {((target_angle/math.pi)*180):.4}, left: {left:.4}, right: {right:.4}"
+            f"Distance: {dist:.4}, Target distance: {self.ring_target_distance}, angle: {((angle/math.pi)*180):.4}, target angle: {((target_angle/math.pi)*180):.4}, left: {left:.4}, right: {right:.4}"
         )
 
-        # increment distance to 3.xxx
+        # if self.last_turn == None:
+        #     if self.last_distance != None:
+        #         if self.last_distance < dist:
+        #             self.ring_target_distance += 0.01
+        #             self.last_distance = None
+        #         else:
+        #             self.last_distance = dist
+        #     elif dist < 0.2:
+        #         self.last_distance = dist
+
         avoid_rotation_step = 0.5
         if not self.goal_reached:
-            if ((np.isnan(left) or left < 0.55) and dist > 0.3) and (
+            if self.bumper_hit:
+                self.bumper_hit = False
+                if dist > 0.3:
+                    msg.linear.x = -0.4
+                if dist > 0.15 and self.bumper_hit_counter < 2:
+                    msg.linear.x = -0.4
+                    self.bumper_hit_counter += 1
+                else:
+                    msg.linear.x = 0.04
+                    self.goal_reached = True
+            elif ((np.isnan(left) or left < 0.45) and dist > 0.3) and (
                 not ((np.isnan(left) and np.isnan(right))) or abs(left - right) > 0.2
             ):
                 self.move_forward = 1
                 msg.angular.z = -avoid_rotation_step
                 self.last_turn = "right"
                 print(f"Avoid, turn right (speed: {avoid_rotation_step})")
-            elif ((np.isnan(right) or right < 0.55) and dist > 0.3) and (
+            elif ((np.isnan(right) or right < 0.45) and dist > 0.3) and (
                 not ((np.isnan(left) and np.isnan(right))) or abs(left - right) > 0.2
             ):
                 msg.angular.z = avoid_rotation_step
@@ -649,10 +690,10 @@ class Mover:
                 if dist > 0.35:
                     msg.linear.x = 0.3
                     print(f"Avoid, move forward (speed: 0.3)")
-                if dist > 0.3:
+                elif dist > 0.3:
                     msg.linear.x = 0.22
                     print(f"Avoid, move forward (speed: 0.22)")
-                elif dist > 0.2:
+                elif dist > 0.25:
                     msg.linear.x = 0.2
                     print(f"Avoid, move forward (speed: 0.2)")
                 elif dist > 0.2:
@@ -703,17 +744,19 @@ class Mover:
                     elif dist > 0.2:
                         msg.linear.x = 0.03
                         print("Move forward (speed: 0.03)")
-                    elif dist > 0.12:
+                    elif dist > self.ring_target_distance:
                         msg.linear.x = 0.01
                         print("Move forward (speed: 0.01)")
                     else:
-                        print(f"Robot under the {color.upper()} ring")
-                        self.speak(f"Im under the {color} ring.")
-                        rospy.sleep(5)
                         self.goal_reached = True
-                        self.back_counter = 4
+
         else:
-            if self.back_counter > 0:
+            if self.back_counter == None:
+                print(f"Robot under the {color.upper()} ring")
+                self.speak(f"Im under the {color} ring.")
+                rospy.sleep(5)
+                self.back_counter = 4
+            elif self.back_counter > 0:
                 self.back_counter -= 1
                 msg.linear.x = -0.2
                 print("Move back", self.back_counter)
@@ -722,6 +765,9 @@ class Mover:
                 self.move_forward = 0
                 self.last_turn = None
                 self.goal_reached = False
+                self.back_counter = None
+                self.bumper_hit_counter = 0
+                self.ring_target_distance = self.ring_default_distance
                 self.state["main"] = "return_to_stored_pose"
                 print("Return to stored pose")
 
@@ -792,9 +838,12 @@ class Mover:
                 print(self.state, 3)
                 self.fade_markers()
         elif self.state["main"] == "moving_to_cylinder":
+            self.fade_markers()
             if res_state == 3:
                 self.state["main"] = "approach_cylinder"
+                self.seq += 1
             elif res_state == 4:
+                self.seq += 1
                 if self.cylinders["cancel_counter"] < 2:
                     self.cylinders["cancel_counter"] += 1
                     cylinder = (
@@ -812,8 +861,12 @@ class Mover:
         elif self.state["main"] == "moving_to_ring":
             if res_state == 3:
                 print(res_state)
+                self.fade_markers()
+                self.seq += 1
                 self.state["main"] = "approach_ring"
             elif res_state == 4:
+                self.fade_markers()
+                self.seq += 1
                 if self.rings["cancel_counter"] < 2:
                     self.rings["cancel_counter"] += 1
                     ring = self.rings["data"].data[self.rings["last_id"] - 1].pose
@@ -836,6 +889,10 @@ class Mover:
 
     def ring_sub_callback(self, data):
         self.rings["data"] = data
+
+    def bumper_callback(self, data):
+        if data.state == 1:
+            self.bumper_hit = True
 
 
 if __name__ == "__main__":

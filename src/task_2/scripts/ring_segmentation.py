@@ -291,13 +291,15 @@ class RingSegmentation:
                     np.power(pose.position.x - e.pose.position.x, 2)
                     + np.power(pose.position.y - e.pose.position.y, 2)
                 )
-                < 0.5
+                < 1
             ):
                 # e.pose.position.x = float((pose.position.x + e.pose.position.x) / 2)
                 # e.pose.position.y = float((pose.position.y + e.pose.position.y) / 2)
                 e.x.append(pose.position.x)
                 e.y.append(pose.position.y)
                 e.calculate_pose()
+                e.pose.orientation = pose.orientation
+                e.color_name[res.color] += 1
                 e.color[
                     (res.marker_color.r, res.marker_color.g, res.marker_color.b)
                 ] += 1
@@ -325,11 +327,11 @@ class RingSegmentation:
         for e in self.sent_ids:
             for x in self.rings:
                 if x.id == e:
-                    poses.append(PoseAndColor(x.to_pose(), x.color_name))
+                    poses.append(PoseAndColor(x.to_pose(), x.get_color_name()))
 
         for e in self.rings:
             if e.id not in self.sent_ids and e.n_detections > 1:
-                poses.append(PoseAndColor(e.to_pose(), e.color_name))
+                poses.append(PoseAndColor(e.to_pose(), e.get_color_name()))
                 self.sent_ids.append(e.id)
 
         for e in poses:
@@ -345,7 +347,7 @@ class RingSegmentation:
                 / self.map_msg.info.resolution
             )
 
-            print(mx, my, gx, gy, self.map[gy, gx])
+            # print(mx, my, gx, gy, self.map[gy, gx], e.color)
         print()
         self.ring_pose_publisher.publish(
             PoseAndColorArray(
@@ -379,7 +381,8 @@ class Ring:
         self.color[color] += 1
         self.id = id
         self.n_detections = 1
-        self.color_name = color_name
+        self.color_name = defaultdict(int)
+        self.color_name[color_name] += 1
         # self.pose.orientation = Quaternion(0, 0, 0, 1)
 
     def to_marker(self):
@@ -433,6 +436,9 @@ class Ring:
         pose = copy.deepcopy(self.pose)
         pose.position.z = 0
         return pose
+
+    def get_color_name(self):
+        return max(self.color_name, key=self.color_name.get)
 
     def calculate_pose(self):
         self.pose.position.x = np.mean(self.x)

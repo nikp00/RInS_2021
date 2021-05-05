@@ -226,6 +226,9 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 
 int main(int argc, char **argv)
 {
+
+    pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
+
     // Initialize ROS
     ros::init(argc, argv, "cylinder_segmentation");
     ros::NodeHandle nh;

@@ -111,7 +111,7 @@ class CylinderHandler:
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )
 
-        if np.isnan(pose.pose.position.x):
+        if np.isnan(pose.pose.position.x) or res.color == "black":
             return
 
         pose.pose.position.z = 0
@@ -136,8 +136,9 @@ class CylinderHandler:
                 # )
                 e.x.append(pose.pose.position.x)
                 e.y.append(pose.pose.position.y)
+                e.angle.append(angle)
                 e.calculate_pose()
-
+                e.color_name[res.color] += 1
                 e.color[
                     (res.marker_color.r, res.marker_color.g, res.marker_color.b)
                 ] += 1
@@ -149,6 +150,7 @@ class CylinderHandler:
         if not skip:
             cylinder = Cylinder(
                 pose,
+                angle,
                 (res.marker_color.r, res.marker_color.g, res.marker_color.b),
                 res.color,
                 self.seq,
@@ -166,11 +168,11 @@ class CylinderHandler:
         for e in self.sent_ids:
             for x in self.cylinders:
                 if x.id == e:
-                    poses.append(PoseAndColor(x.pose.pose, x.color_name))
+                    poses.append(PoseAndColor(x.pose.pose, x.get_color_name()))
 
         for e in self.cylinders:
             if e.id not in self.sent_ids and e.n_detections > 1:
-                poses.append(PoseAndColor(e.pose.pose, e.color_name))
+                poses.append(PoseAndColor(e.pose.pose, e.get_color_name()))
                 self.sent_ids.append(e.id)
 
         self.cylinder_pose_publisher.publish(
@@ -226,16 +228,20 @@ class CylinderHandler:
 
 
 class Cylinder:
-    def __init__(self, pose: PoseStamped, color: tuple, color_name: str, id: int):
+    def __init__(
+        self, pose: PoseStamped, angle, color: tuple, color_name: str, id: int
+    ):
         self.pose = pose
         # self.color = Cylinder.colors["yellow"]  # color
         self.x = [pose.pose.position.x]
         self.y = [pose.pose.position.y]
+        self.angle = [angle]
         self.color = defaultdict(int)
         self.color[color] += 1
         self.id = id
         self.n_detections = 1
-        self.color_name = color_name
+        self.color_name = defaultdict(int)
+        self.color_name[color_name] += 1
 
     def to_marker(self):
         m = Marker()
@@ -285,9 +291,16 @@ class Cylinder:
         m.text = str(self.n_detections)
         return m
 
+    def get_color_name(self):
+        return max(self.color_name, key=self.color_name.get)
+
     def calculate_pose(self):
         self.pose.pose.position.x = np.mean(self.x)
         self.pose.pose.position.y = np.mean(self.y)
+        # self.pose.pose.orientation = Quaternion(
+        #     *list(tf.transformations.quaternion_from_euler(0, 0, np.mean(self.angle)))
+        # )
+        # print(self.angle)
 
 
 if __name__ == "__main__":
