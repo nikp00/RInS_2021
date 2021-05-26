@@ -138,6 +138,9 @@ class CylinderHandler:
                 e.y.append(pose.pose.position.y)
                 e.angle.append(angle)
                 e.calculate_pose()
+
+                e.pose.pose.orientation = pose.pose.orientation
+
                 e.color_name[res.color] += 1
                 e.color[
                     (res.marker_color.r, res.marker_color.g, res.marker_color.b)

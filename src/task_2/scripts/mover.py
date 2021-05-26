@@ -34,7 +34,7 @@ class Mover:
         self.goal_reached = False
         self.last_distance = None
         self.ring_default_distance = 0.09
-        self.ring_target_distance = 0.07
+        self.ring_target_distance = 0.09
         self.bumper_hit = False
         self.bumper_hit_counter = 0
 

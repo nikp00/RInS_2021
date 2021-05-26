@@ -210,19 +210,19 @@ link_libraries(${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/mover.py
-  scripts/map_segmentation.py
-  scripts/tts.py
-  scripts/cylinder_handler.py
-  scripts/capture_train_img.py
-  scripts/ring_segmentation.py
-  scripts/move_arm.py
-  scripts/color_classifier.py
+  # scripts/mover.py
+  # scripts/map_segmentation.py
+  # scripts/tts.py
+  # scripts/cylinder_handler.py
+  # scripts/capture_train_img.py
+  # scripts/ring_segmentation.py
+  # scripts/move_arm.py
+  # scripts/color_classifier.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(cylinder_segmentation src/cylinder_segmentation.cpp)
+# add_executable(cylinder_segmentation src/cylinder_segmentation.cpp)
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
