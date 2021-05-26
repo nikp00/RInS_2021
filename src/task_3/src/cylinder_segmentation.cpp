@@ -19,7 +19,7 @@
 
 #include "std_msgs/ColorRGBA.h"
 #include "geometry_msgs/PointStamped.h"
-#include "task_2/CylinderSegmentation.h"
+#include "task_3/CylinderSegmentation.h"
 
 ros::Publisher pubx;
 ros::Publisher puby;
@@ -205,7 +205,7 @@ void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
 
         tf2::doTransform(point_camera, point_map, tss);
 
-        task_2::CylinderSegmentation msg;
+        task_3::CylinderSegmentation msg;
         std_msgs::ColorRGBA color;
 
         color.r = r;
@@ -249,7 +249,7 @@ int main(int argc, char **argv)
     pubx = nh.advertise<pcl::PCLPointCloud2>("planes", 1);
     puby = nh.advertise<pcl::PCLPointCloud2>("cylinder", 1);
 
-    cylinder_pose_publisher = nh.advertise<task_2::CylinderSegmentation>("detected_cylinder", 1);
+    cylinder_pose_publisher = nh.advertise<task_3::CylinderSegmentation>("detected_cylinder", 1);
 
     // Spin
     ros::spin();

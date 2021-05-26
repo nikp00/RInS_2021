@@ -74,7 +74,9 @@ add_message_files(
   FILES
   CylinderSegmentation.msg
   PoseAndColor.msg
-  # PoseAndColorArray.msg
+  PoseAndColorArray.msg
+  FaceData.msg
+  FaceDataArray.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -82,6 +84,7 @@ add_service_files(
   FILES
   TextToSpeechService.srv
   ColorClassifierService.srv
+  GetNormalService.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -214,16 +217,17 @@ catkin_install_python(PROGRAMS
   scripts/map_segmentation.py
   scripts/tts.py
   scripts/cylinder_handler.py
-  scripts/capture_train_img.py
   scripts/ring_segmentation.py
   scripts/move_arm.py
   scripts/color_classifier.py
+  scripts/face_detector.py
   scripts/qr_code.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 add_executable(cylinder_segmentation src/cylinder_segmentation.cpp)
+add_executable(normal_finder src/normal_finder.cpp)
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html

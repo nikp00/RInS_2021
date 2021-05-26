@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from visualization_msgs.msg import MarkerArray, Marker
 
-from task_2.srv import ColorClassifierService, ColorClassifierServiceRequest
+from task_3.srv import ColorClassifierService, ColorClassifierServiceRequest
 from geometry_msgs.msg import (
     PointStamped,
     Point,
@@ -19,7 +19,7 @@ from geometry_msgs.msg import (
     PoseArray,
 )
 from std_msgs.msg import ColorRGBA, Header
-from task_2.msg import CylinderSegmentation, PoseAndColor, PoseAndColorArray
+from task_3.msg import CylinderSegmentation, PoseAndColor, PoseAndColorArray
 
 
 class CylinderHandler:
@@ -142,9 +142,7 @@ class CylinderHandler:
                 e.pose.pose.orientation = pose.pose.orientation
 
                 e.color_name[res.color] += 1
-                e.color[
-                    (res.marker_color.r, res.marker_color.g, res.marker_color.b)
-                ] += 1
+                e.color[(res.marker_color.r, res.marker_color.g, res.marker_color.b)] += 1
 
                 e.n_detections += 1
                 skip = True
@@ -162,16 +160,14 @@ class CylinderHandler:
             self.cylinders.append(cylinder)
 
         self.cylinder_marker_publisher.publish([e.to_marker() for e in self.cylinders])
-        self.n_detections_marker_publisher.publish(
-            [e.to_text() for e in self.cylinders]
-        )
+        self.n_detections_marker_publisher.publish([e.to_text() for e in self.cylinders])
 
         poses = list()
 
         for e in self.sent_ids:
             for x in self.cylinders:
                 if x.id == e:
-                    poses.append(PoseAndColor(x.pose.pose, x.get_color_name(), e.id))
+                    poses.append(PoseAndColor(x.pose.pose, x.get_color_name(), x.id))
 
         for e in self.cylinders:
             if e.id not in self.sent_ids and e.n_detections > 1:
@@ -182,9 +178,7 @@ class CylinderHandler:
 
 
 class Cylinder:
-    def __init__(
-        self, pose: PoseStamped, angle, color: tuple, color_name: str, id: int
-    ):
+    def __init__(self, pose: PoseStamped, angle, color: tuple, color_name: str, id: int):
         self.pose = pose
         # self.color = Cylinder.colors["yellow"]  # color
         self.x = [pose.pose.position.x]

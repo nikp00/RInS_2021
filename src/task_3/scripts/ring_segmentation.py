@@ -23,11 +23,11 @@ from geometry_msgs.msg import (
 from cv_bridge import CvBridge, CvBridgeError
 from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import ColorRGBA
-from task_2.msg import PoseAndColor, PoseAndColorArray
+from task_3.msg import PoseAndColor, PoseAndColorArray
 from nav_msgs.msg import OccupancyGrid
 
 
-from task_2.srv import ColorClassifierService, ColorClassifierServiceRequest
+from task_3.srv import ColorClassifierService, ColorClassifierServiceRequest
 
 
 class RingSegmentation:
@@ -53,15 +53,11 @@ class RingSegmentation:
             "equalize_hist": rospy.get_param("~equalize_hist", default=False),
         }
 
-        self.ring_markers_publisher = rospy.Publisher(
-            "ring_markers", MarkerArray, queue_size=10
-        )
+        self.ring_markers_publisher = rospy.Publisher("ring_markers", MarkerArray, queue_size=10)
         self.n_detections_marker_publisher = rospy.Publisher(
             "ring_n_detections_markers", MarkerArray, queue_size=10
         )
-        self.ring_pose_publisher = rospy.Publisher(
-            "ring_pose", PoseAndColorArray, queue_size=10
-        )
+        self.ring_pose_publisher = rospy.Publisher("ring_pose", PoseAndColorArray, queue_size=10)
         self.image_publisher = rospy.Publisher("ring_image", Image, queue_size=10)
 
         rospy.wait_for_service("/color_classifier")
@@ -109,9 +105,7 @@ class RingSegmentation:
 
         ret, thresh = cv2.threshold(self.cv_image, 50, 255, cv2.THRESH_BINARY)
 
-        contours, hierarchy = cv2.findContours(
-            thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
         elps = []
         for cnt in contours:
@@ -124,9 +118,7 @@ class RingSegmentation:
             for m in range(n + 1, len(elps)):
                 e1 = elps[n]
                 e2 = elps[m]
-                dist = np.sqrt(
-                    ((e1[0][0] - e2[0][0]) ** 2 + (e1[0][1] - e2[0][1]) ** 2)
-                )
+                dist = np.sqrt(((e1[0][0] - e2[0][0]) ** 2 + (e1[0][1] - e2[0][1]) ** 2))
                 if dist < 5:
                     candidates.append((e1, e2))
 
@@ -147,9 +139,7 @@ class RingSegmentation:
 
             cv2.ellipse(self.cv_image, e1, 200, 2)
             cv2.ellipse(self.cv_image, e2, 200, 2)
-            cv2.circle(
-                self.cv_image, (int(center[1]), int(center[0])), 3, (0, 255, 0), 3
-            )
+            cv2.circle(self.cv_image, (int(center[1]), int(center[0])), 3, (0, 255, 0), 3)
 
             x_min = x1 if x1 > 0 else 0
             x_max = x2 if x2 < self.cv_image.shape[0] else self.cv_image.shape[0]
@@ -207,7 +197,7 @@ class RingSegmentation:
         self.image_publisher.publish(ros_img)
 
     def get_pose(self, e, dist, stamp) -> Pose:
-        k_f = 525
+        k_f = 554
 
         elipse_x = self.dims[1] / 2 - e[0][0]
         elipse_y = self.dims[0] / 2 - e[0][1]
@@ -255,9 +245,7 @@ class RingSegmentation:
             base_pose.pose.position.x - pose.position.x,
         )
 
-        pose.orientation = Quaternion(
-            *list(tf.transformations.quaternion_from_euler(0, 0, angle))
-        )
+        pose.orientation = Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
 
         return pose
 
@@ -300,9 +288,7 @@ class RingSegmentation:
                 e.calculate_pose()
                 e.pose.orientation = pose.orientation
                 e.color_name[res.color] += 1
-                e.color[
-                    (res.marker_color.r, res.marker_color.g, res.marker_color.b)
-                ] += 1
+                e.color[(res.marker_color.r, res.marker_color.g, res.marker_color.b)] += 1
 
                 e.n_detections += 1
 
@@ -327,7 +313,7 @@ class RingSegmentation:
         for e in self.sent_ids:
             for x in self.rings:
                 if x.id == e:
-                    poses.append(PoseAndColor(x.to_pose(), x.get_color_name(), e.id))
+                    poses.append(PoseAndColor(x.to_pose(), x.get_color_name(), x.id))
 
         for e in self.rings:
             if e.id not in self.sent_ids and e.n_detections > 1:

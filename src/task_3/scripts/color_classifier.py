@@ -9,7 +9,7 @@ import colorsys
 
 
 from std_msgs.msg import ColorRGBA
-from task_2.srv import ColorClassifierService, ColorClassifierServiceResponse
+from task_3.srv import ColorClassifierService, ColorClassifierServiceResponse
 
 
 class ColorClassifier:
@@ -20,9 +20,7 @@ class ColorClassifier:
         self.bridge = CvBridge()
         self.load_data()
 
-        self.srv = rospy.Service(
-            "color_classifier", ColorClassifierService, self.predict
-        )
+        self.srv = rospy.Service("color_classifier", ColorClassifierService, self.predict)
 
         rospy.spin()
 

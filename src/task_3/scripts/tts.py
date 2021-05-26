@@ -3,7 +3,7 @@ from google.cloud import texttospeech
 import os
 import sys
 
-from task_2.srv import TextToSpeechService
+from task_3.srv import TextToSpeechService
 from sound_play.msg import SoundRequest
 
 
@@ -12,9 +12,7 @@ class TextToSpeach:
         self.node = rospy.init_node("text_to_speech")
         self.srv = rospy.Service("text_to_speech", TextToSpeechService, self.speak)
 
-        self.voice_publisher = rospy.Publisher(
-            "/robotsound", SoundRequest, queue_size=10
-        )
+        self.voice_publisher = rospy.Publisher("/robotsound", SoundRequest, queue_size=10)
 
         self.client = texttospeech.TextToSpeechClient()
         self.voice = texttospeech.VoiceSelectionParams(
