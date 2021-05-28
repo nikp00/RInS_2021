@@ -37,10 +37,10 @@ pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>
 pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
 pcl::IntegralImageNormalEstimation<PointT, pcl::Normal> ne;
 
-void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
-{
-    pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
-}
+// void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
+// {
+//     pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
+// }
 
 bool find_normal(task_3::GetNormalService::Request &req, task_3::GetNormalService::Response &res)
 {
@@ -53,6 +53,12 @@ bool find_normal(task_3::GetNormalService::Request &req, task_3::GetNormalServic
     // ne.setInputCloud(cloud_filtered);
     // ne.setRadiusSearch(req.radius);
     // ne.compute(*cloud_normals);
+
+    pcl::PointCloud<pcl::PointXYZ> temp_cloud;
+    pcl::fromROSMsg(req.cloud, *cloud);
+
+    // const pcl::PCLPointCloud2Ptr &cloud_blob = boost::make_shared<pcl::PCLPointCloud2Ptr>(req.cloud);
+    // pcl::fromPCLPointCloud2(temp_cloud, *cloud);
 
     ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
     ne.setMaxDepthChangeFactor(0.02f);
@@ -97,12 +103,6 @@ int main(int argc, char **argv)
     // For transforming between coordinate frames
     tf2_ros::TransformListener tf2_listener(tf2_buffer);
 
-    nh.param<double>("min_y", min_y, -0.3);
-    nh.param<double>("max_y", max_y, 0.09);
-    nh.param<double>("min_z", min_z, 0.2);
-    nh.param<double>("max_z", max_z, 2.0);
-    // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe("/camera/depth/points", 1, cloud_cb);
     pubx = nh.advertise<pcl::PCLPointCloud2>("planes", 1);
 
     ros::ServiceServer service = nh.advertiseService("get_normal", find_normal);

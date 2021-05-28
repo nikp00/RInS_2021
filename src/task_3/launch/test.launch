@@ -1,5 +1,5 @@
 <launch>
-    <node name="face_detector" pkg="task_3" type="face_detector.py" output="log" args="$(find task_3)/data/faceNet/deploy.prototxt.txt $(find task_3)/data/faceNet/res10_300x300_ssd_iter_140000.caffemodel $(find task_3)/data/mask_detector/mask_detector.model" />
+    <node name="face_detector" pkg="task_3" type="face_detector.py" output="screen" args="$(find task_3)/data/faceNet/deploy.prototxt.txt $(find task_3)/data/faceNet/res10_300x300_ssd_iter_140000.caffemodel $(find task_3)/data/mask_detector/mask_detector.model" />
     <node name="normal_finder" pkg="task_3" type="normal_finder" output="log" />
 
     <node name="move_arm" pkg="task_3" type="move_arm.py" output="log" />

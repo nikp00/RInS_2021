@@ -714,7 +714,9 @@ class Mover:
         msg.header.frame_id = "map"
         msg.pose = face.navigation_pose
 
-        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
+        self.waypoint_markers.markers.append(
+            self.create_marker(self.seq + 100, msg.pose, b=1)
+        )
         self.pose_pub.publish(msg)
 
     def fade_markers(self):

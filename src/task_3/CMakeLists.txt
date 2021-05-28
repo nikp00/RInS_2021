@@ -224,6 +224,7 @@ catkin_install_python(PROGRAMS
   scripts/color_classifier.py
   scripts/face_detector.py
   scripts/qr_code.py
+  scripts/extract_speech.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

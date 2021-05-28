@@ -1,6 +1,7 @@
 import sys
 
 from numpy.core.fromnumeric import shape
+from tensorflow.python import tf2
 import rospy
 import cv2
 import numpy as np
@@ -14,7 +15,7 @@ import math
 import message_filters
 
 from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2
 from geometry_msgs.msg import (
     PointStamped,
     Vector3,
@@ -48,6 +49,8 @@ class FaceDetectorDNN:
         self.seq = 0
         self.faces = list()
         self.rgb_image = np.zeros(shape=(430, 640, 3), dtype=np.uint8)
+        self.depth_image = None
+        self.point_cloud = None
         self.img_gamma2 = None
 
         self.face_marker_publisher = rospy.Publisher("face_markers", MarkerArray, queue_size=1000)
@@ -67,8 +70,12 @@ class FaceDetectorDNN:
         # Subscribers
         self.rgb_image_subscriber = message_filters.Subscriber("/camera/rgb/image_raw", Image)
         self.depth_image_subscriber = message_filters.Subscriber("/camera/depth/image_raw", Image)
+        self.point_cloud_subscriber = message_filters.Subscriber(
+            "/camera/depth/points", PointCloud2
+        )
         self.ts = message_filters.TimeSynchronizer(
-            [self.rgb_image_subscriber, self.depth_image_subscriber], 10
+            [self.rgb_image_subscriber, self.depth_image_subscriber, self.point_cloud_subscriber],
+            10,
         )
         self.ts.registerCallback(self.image_sub)
         self.detect_mask(0, 0, 10, 10)
@@ -86,11 +93,11 @@ class FaceDetectorDNN:
         if not stamp:
             stamp = rospy.Time.now()
         point_s = PointStamped()
-        point_s.point.x = -y + (nx * 0.05 * 15)
+        point_s.point.x = -y + (nx * 1)
         point_s.point.y = 0
-        point_s.point.z = x + (nz * 0.05 * 15)
+        point_s.point.z = x + (nz * 1)
         point_s.header.frame_id = "camera_rgb_optical_frame"
-        point_s.header.stamp = rospy.Time.now()
+        point_s.header.stamp = stamp
 
         pose = None
         while pose == None:
@@ -105,11 +112,13 @@ class FaceDetectorDNN:
         return pose
 
     def get_pose(self, coords, dist, stamp):
-        k_f = 554
+        k_f = 525
         x1, x2, y1, y2 = coords
         face_x = self.dims[1] / 2 - (x1 + x2) / 2.0
 
-        res = self.get_normal(x=(x1 + x2) // 2, y=(y1 + y2) // 2, radius=0.5)
+        res = self.get_normal(
+            cloud=self.point_cloud, x=(x1 + x2) // 2, y=(y1 + y2) // 2, radius=0.5
+        )
 
         angle_to_target = np.arctan2(face_x, k_f)
 
@@ -221,7 +230,6 @@ class FaceDetectorDNN:
                         enc = enc[0]
                     else:
                         enc = np.zeros(shape=(128,))
-                    print(mask, without_mask)
                     skip = False
                     for e in self.faces:
                         if np.sqrt(
@@ -244,8 +252,13 @@ class FaceDetectorDNN:
                             Face(face_pose, navigation_pose, enc, self.seq, mask > without_mask)
                         )
 
-        self.face_marker_publisher.publish([e.to_marker() for e in self.faces])
-        self.n_detections_marker_publisher.publish([e.to_text() for e in self.faces])
+        self.face_marker_publisher.publish(
+            [e.to_marker() for e in self.faces]
+            + [e.to_navigation_marker() for e in self.faces if e.n_detections > 1]
+        )
+        self.n_detections_marker_publisher.publish(
+            [e.to_text() for e in self.faces if e.n_detections > 1]
+        )
 
         self.face_pose_publisher.publish(
             FaceDataArray(
@@ -257,13 +270,16 @@ class FaceDetectorDNN:
             )
         )
 
-    def image_sub(self, rgb_image, depth_image):
+    def image_sub(self, rgb_image, depth_image, point_cloud):
         try:
             self.rgb_image = self.bridge.imgmsg_to_cv2(rgb_image, "bgr8")
             self.depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
         except CvBridgeError as e:
             print(e)
+
         self.depth_image_message = depth_image
+
+        self.point_cloud = point_cloud
 
 
 class Face:
@@ -271,28 +287,33 @@ class Face:
         self.face_pose = face_pose
         self.navigation_pose = navigation_pose
         self.enc = copy.deepcopy(enc)
-        self.color = ColorRGBA(0, 1, 0, 1)
+        self.color = ColorRGBA(0, 1, 0, 0.5)
         self.id = id
         self.fx = [face_pose.position.x]
         self.fy = [face_pose.position.y]
         self.nx = [navigation_pose.position.x]
         self.ny = [navigation_pose.position.y]
+        self.na = [self.quaternion_to_euler(navigation_pose)]
         self.n_detections = 1
         self.mask = mask
 
     def add_pose(self, face_pose: Pose, navigation_pose: Pose):
-        # self.fx.append(face_pose.position.x)
-        # self.fx.append(face_pose.position.y)
-        # self.nx.append(navigation_pose.position.x)
-        # self.nx.append(navigation_pose.position.x)
-        self.face_pose.position.x = (self.face_pose.position.x + face_pose.position.x) / 2
-        self.face_pose.position.y = (self.face_pose.position.y + face_pose.position.y) / 2
-        self.navigation_pose.position.x = (
-            self.navigation_pose.position.x + navigation_pose.position.x
-        ) / 2
-        self.navigation_pose.position.y = (
-            self.navigation_pose.position.y + navigation_pose.position.y
-        ) / 2
+        self.fx.append(face_pose.position.x)
+        self.fy.append(face_pose.position.y)
+        self.nx.append(navigation_pose.position.x)
+        self.ny.append(navigation_pose.position.y)
+
+        self.na.append(self.quaternion_to_euler(navigation_pose))
+        # self.face_pose.position.x = (self.face_pose.position.x + face_pose.position.x) / 2
+        # self.face_pose.position.y = (self.face_pose.position.y + face_pose.position.y) / 2
+        # self.navigation_pose.position.x = (
+        #     self.navigation_pose.position.x + navigation_pose.position.x
+        # ) / 2
+        # self.navigation_pose.position.y = (
+        #     self.navigation_pose.position.y + navigation_pose.position.y
+        # ) / 2
+        self.calculate_pose()
+        self.calculate_rotations()
 
     def to_marker(self):
         marker = Marker()
@@ -305,6 +326,26 @@ class Face:
         marker.pose = self.face_pose
         marker.color = self.color
         marker.id = self.id
+        if self.n_detections < 1:
+            marker.scale.x = 0.5
+            marker.scale.y = 0.5
+            marker.scale.z = 0.5
+        return marker
+
+    def to_navigation_marker(self):
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.type = Marker.ARROW
+        marker.action = Marker.ADD
+        marker.frame_locked = False
+        marker.lifetime = rospy.Duration(0)
+        marker.scale = Vector3(0.1, 0.1, 0.1)
+        marker.pose = self.navigation_pose
+        marker.color = self.color
+        marker.id = self.id + 100
+        marker.scale.x = 0.5
+        marker.scale.y = 0.1
+        marker.scale.z = 0
         return marker
 
     def to_text(self):
@@ -331,10 +372,34 @@ class Face:
         return m
 
     def calculate_pose(self):
-        self.face_pose.position.x = np.mean(self.fx)
-        self.face_pose.position.y = np.mean(self.fy)
-        self.navigation_pose.position.x = np.mean(self.nx)
-        self.navigation_pose.position.y = np.mean(self.ny)
+        self.face_pose.position.x = np.mean(self.remove_outlier(self.fx))
+        self.face_pose.position.y = np.mean(self.remove_outlier(self.fy))
+        self.navigation_pose.position.x = np.mean(self.remove_outlier(self.nx))
+        self.navigation_pose.position.y = np.mean(self.remove_outlier(self.ny))
+
+    def calculate_rotations(self):
+        angle = np.mean(self.remove_outlier(self.na))
+        self.navigation_pose.orientation = self.euler_to_quaternion(angle)
+
+    def quaternion_to_euler(self, pose):
+        return tf.transformations.euler_from_quaternion(
+            [
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w,
+            ]
+        )[2]
+
+    def euler_to_quaternion(self, angle):
+        return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
+
+    def remove_outlier(self, array, max_deviation=2):
+        mean = np.mean(array)
+        std = np.std(array)
+        distance_from_mean = abs(array - mean)
+        not_outlier = distance_from_mean < max_deviation * std
+        return np.array(array)[not_outlier]
 
 
 if __name__ == "__main__":
