@@ -233,8 +233,8 @@ class FaceDetectorDNN:
                     skip = False
                     for e in self.faces:
                         if np.sqrt(
-                            np.power(face_pose.position.x - e.face_pose.position.x, 2)
-                            + np.power(face_pose.position.y - e.face_pose.position.y, 2)
+                            np.power(face_pose.position.x - e.obj_pose.position.x, 2)
+                            + np.power(face_pose.position.y - e.obj_pose.position.y, 2)
                         ) < 0.5 and (
                             (enc_available and face_recognition.compare_faces([e.enc], enc)[0])
                             or (mask > without_mask) == e.mask
@@ -283,29 +283,30 @@ class FaceDetectorDNN:
 
 
 class Face:
-    def __init__(self, face_pose: Pose, navigation_pose: Pose, enc, id, mask=False):
-        self.face_pose = face_pose
+    def __init__(self, obj_pose: Pose, navigation_pose: Pose, enc, id, mask=False):
+        self.obj_pose = obj_pose
         self.navigation_pose = navigation_pose
         self.enc = copy.deepcopy(enc)
         self.color = ColorRGBA(0, 1, 0, 0.5)
         self.id = id
-        self.fx = [face_pose.position.x]
-        self.fy = [face_pose.position.y]
+        self.ox = [obj_pose.position.x]
+        self.oy = [obj_pose.position.y]
         self.nx = [navigation_pose.position.x]
         self.ny = [navigation_pose.position.y]
         self.na = [self.quaternion_to_euler(navigation_pose)]
         self.n_detections = 1
         self.mask = mask
 
-    def add_pose(self, face_pose: Pose, navigation_pose: Pose):
-        self.fx.append(face_pose.position.x)
-        self.fy.append(face_pose.position.y)
+    def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
+        navigation_pose.position.z = 0
+        self.ox.append(obj_pose.position.x)
+        self.oy.append(obj_pose.position.y)
         self.nx.append(navigation_pose.position.x)
         self.ny.append(navigation_pose.position.y)
 
         self.na.append(self.quaternion_to_euler(navigation_pose))
-        # self.face_pose.position.x = (self.face_pose.position.x + face_pose.position.x) / 2
-        # self.face_pose.position.y = (self.face_pose.position.y + face_pose.position.y) / 2
+        # self.obj_pose.position.x = (self.obj_pose.position.x + obj_pose.position.x) / 2
+        # self.obj_pose.position.y = (self.obj_pose.position.y + obj_pose.position.y) / 2
         # self.navigation_pose.position.x = (
         #     self.navigation_pose.position.x + navigation_pose.position.x
         # ) / 2
@@ -323,7 +324,7 @@ class Face:
         marker.frame_locked = False
         marker.lifetime = rospy.Duration(0)
         marker.scale = Vector3(0.1, 0.1, 0.1)
-        marker.pose = self.face_pose
+        marker.pose = self.obj_pose
         marker.color = self.color
         marker.id = self.id
         if self.n_detections < 1:
@@ -357,7 +358,7 @@ class Face:
         m.ns = "face_n_detections_markers"
         m.type = Marker.TEXT_VIEW_FACING
         m.action = Marker.ADD
-        m.pose = copy.deepcopy(self.face_pose)
+        m.pose = copy.deepcopy(self.obj_pose)
         m.pose.position.z = 1
         m.scale.x = 0.3
         m.scale.y = 0.3
@@ -372,8 +373,8 @@ class Face:
         return m
 
     def calculate_pose(self):
-        self.face_pose.position.x = np.mean(self.remove_outlier(self.fx))
-        self.face_pose.position.y = np.mean(self.remove_outlier(self.fy))
+        self.obj_pose.position.x = np.mean(self.remove_outlier(self.ox))
+        self.obj_pose.position.y = np.mean(self.remove_outlier(self.oy))
         self.navigation_pose.position.x = np.mean(self.remove_outlier(self.nx))
         self.navigation_pose.position.y = np.mean(self.remove_outlier(self.ny))
 
@@ -399,7 +400,10 @@ class Face:
         std = np.std(array)
         distance_from_mean = abs(array - mean)
         not_outlier = distance_from_mean < max_deviation * std
-        return np.array(array)[not_outlier]
+        filtered = np.array(array)[not_outlier]
+        if len(filtered) == 0:
+            filtered = [array[0]]
+        return filtered
 
 
 if __name__ == "__main__":

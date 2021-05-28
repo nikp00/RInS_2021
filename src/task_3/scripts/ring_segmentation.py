@@ -10,11 +10,12 @@ import tf
 from collections import defaultdict
 import copy
 
-
+from tf2_geometry_msgs import do_transform_point
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import (
     PointStamped,
     PoseStamped,
+    TransformStamped,
     Vector3,
     Pose,
     Point,
@@ -46,7 +47,12 @@ class RingSegmentation:
         self.depth_image = None
         self.new_image = False
 
-        self.sent_ids = list()
+        self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
+        self.map_transform = TransformStamped()
+        self.map_transform.transform.translation.x = self.map_msg.info.origin.position.x
+        self.map_transform.transform.translation.y = self.map_msg.info.origin.position.y
+        self.map_transform.transform.translation.z = self.map_msg.info.origin.position.z
+        self.map_transform.transform.rotation = self.map_msg.info.origin.orientation
 
         self.params = {
             "invert_image": rospy.get_param("~invert_image", default=False),
@@ -62,8 +68,6 @@ class RingSegmentation:
 
         rospy.wait_for_service("/color_classifier")
         self.get_color = rospy.ServiceProxy("/color_classifier", ColorClassifierService)
-
-        self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
 
         self.depth_image_subscriber = rospy.Subscriber(
             "/camera/depth/image_raw", Image, self.depth_callback
@@ -204,9 +208,6 @@ class RingSegmentation:
 
         angle_to_target = np.arctan2(elipse_x, k_f)
 
-        # dist = np.cos(np.arctan2(elipse_y, k_f)) * dist
-        # dist = np.sqrt(dist ** 2 - 0.71 ** 2)
-
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
 
         point_s = PointStamped()
@@ -249,6 +250,76 @@ class RingSegmentation:
 
         return pose
 
+    def calculate_navigation_pose(self, x, y):
+        print(x, y)
+        grid_x = int((x - self.map_msg.info.origin.position.x) / self.map_msg.info.resolution)
+        grid_y = self.map_msg.info.height - int(
+            (y - self.map_msg.info.origin.position.y) / self.map_msg.info.resolution
+        )
+        cell = self.map[grid_y, grid_x]
+        target = 0 if cell[0] == 100 else 100
+        print(cell, target)
+
+        left = self.check_direction(grid_x, grid_y, dx=-1, target=target)
+        top = self.check_direction(grid_x, grid_y, dy=1, target=target)
+        right = self.check_direction(grid_x, grid_y, dx=1, target=target)
+        bottom = self.check_direction(grid_x, grid_y, dy=-1, target=target)
+
+        print(f"left: {left}, top: {top}, right: {right}, bottom: {bottom}")
+        dists = [e for e in [left, top, right, bottom] if e[2] != 0]
+        print("dists", dists)
+        if len(dists) > 0:
+            new_x, new_y, dist = min(dists, key=lambda x: x[2])
+            print(new_x, new_y, dist)
+            if target == 0:
+                direction = (grid_x - new_x, grid_y - new_y)
+            else:
+                direction = (new_x - grid_x, new_y - grid_y)
+
+            print(direction)
+
+            grid_x = grid_x + direction[0] * 0.05 * 10
+            grid_y = grid_y + direction[1] * 0.05 * 10
+
+            grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
+            grid_x = grid_x * self.map_msg.info.resolution
+            pt = PointStamped()
+            pt.point.x = grid_x
+            pt.point.y = grid_y
+            pt.point.z = 0
+            pt = do_transform_point(pt, self.map_transform)
+
+            pose = Pose()
+            pose.position = pt.point
+
+            print()
+            print()
+            print()
+
+            angle = np.arctan2(
+                y - pose.position.y,
+                x - pose.position.x,
+            )
+
+            pose.orientation = Quaternion(
+                *list(tf.transformations.quaternion_from_euler(0, 0, angle))
+            )
+            return pose
+
+    def check_direction(self, x, y, dx=0, dy=0, target=0):
+        start_x = x
+        start_y = y
+        while (
+            (0 < x < self.map.shape[1])
+            and (0 < y < self.map.shape[0])
+            and self.map[y, x][0] != target
+        ):
+            y += dy
+            x += dx
+
+        dist = np.sqrt(np.power(x - start_x, 2) + np.power(y - start_y, 2))
+        return x, y, dist
+
     def get_current_pose(self, time):
         pose_translation = None
         while pose_translation is None:
@@ -272,24 +343,20 @@ class RingSegmentation:
         return pose
 
     def add_ring(self, pose: Pose, res):
+        navigation_pose = self.calculate_navigation_pose(pose.position.x, pose.position.y)
         skip = False
         for e in self.rings:
             if (
                 np.sqrt(
-                    np.power(pose.position.x - e.pose.position.x, 2)
-                    + np.power(pose.position.y - e.pose.position.y, 2)
+                    np.power(pose.position.x - e.obj_pose.position.x, 2)
+                    + np.power(pose.position.y - e.obj_pose.position.y, 2)
                 )
-                < 1
+                < 0.5
             ):
-                # e.pose.position.x = float((pose.position.x + e.pose.position.x) / 2)
-                # e.pose.position.y = float((pose.position.y + e.pose.position.y) / 2)
-                e.x.append(pose.position.x)
-                e.y.append(pose.position.y)
-                e.calculate_pose()
-                e.pose.orientation = pose.orientation
+
+                e.add_pose(pose, navigation_pose)
                 e.color_name[res.color] += 1
                 e.color[(res.marker_color.r, res.marker_color.g, res.marker_color.b)] += 1
-
                 e.n_detections += 1
 
                 skip = True
@@ -298,6 +365,7 @@ class RingSegmentation:
         if not skip:
             ring = Ring(
                 pose,
+                navigation_pose,
                 (res.marker_color.r, res.marker_color.g, res.marker_color.b),
                 res.color,
                 self.seq,
@@ -305,22 +373,16 @@ class RingSegmentation:
             self.seq += 1
             self.rings.append(ring)
 
-        self.ring_markers_publisher.publish([e.to_marker() for e in self.rings])
+        self.ring_markers_publisher.publish(
+            [e.to_marker() for e in self.rings] + [e.to_navigation_marker() for e in self.rings]
+        )
         self.n_detections_marker_publisher.publish([e.to_text() for e in self.rings])
 
-        poses = list()
-
-        for e in self.sent_ids:
-            for x in self.rings:
-                if x.id == e:
-                    poses.append(PoseAndColor(x.to_pose(), x.get_color_name(), x.id))
-
-        for e in self.rings:
-            if e.id not in self.sent_ids and e.n_detections > 1:
-                poses.append(PoseAndColor(e.to_pose(), e.get_color_name(), e.id))
-                self.sent_ids.append(e.id)
-
-        self.ring_pose_publisher.publish(PoseAndColorArray(poses))
+        self.ring_pose_publisher.publish(
+            PoseAndColorArray(
+                [PoseAndColor(e.navigation_pose, e.get_color_name(), e.id) for e in self.rings]
+            )
+        )
 
     def depth_callback(self, data):
         try:
@@ -337,28 +399,42 @@ class RingSegmentation:
 
 
 class Ring:
-    def __init__(self, pose: Pose, color: tuple, color_name: str, id: int):
-        self.pose = pose
-        self.x = [pose.position.x]
-        self.y = [pose.position.y]
+    def __init__(
+        self, obj_pose: Pose, navigation_pose: Pose, color: tuple, color_name: str, id: int
+    ):
+        self.obj_pose = obj_pose
+        self.navigation_pose = navigation_pose
+        self.ox = [obj_pose.position.x]
+        self.oy = [obj_pose.position.y]
+        self.nx = [navigation_pose.position.x]
+        self.ny = [navigation_pose.position.y]
+        self.na = [self.quaternion_to_euler(navigation_pose)]
         self.color = defaultdict(int)
         self.color[color] += 1
         self.id = id
         self.n_detections = 1
         self.color_name = defaultdict(int)
         self.color_name[color_name] += 1
-        # self.pose.orientation = Quaternion(0, 0, 0, 1)
+
+    def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
+        # navigation_pose.position.z = 0
+        self.ox.append(obj_pose.position.x)
+        self.oy.append(obj_pose.position.y)
+        self.nx.append(navigation_pose.position.x)
+        self.ny.append(navigation_pose.position.y)
+        self.na.append(self.quaternion_to_euler(navigation_pose))
+        self.calculate_pose()
+        self.calculate_rotations()
 
     def to_marker(self):
         m = Marker()
         m.header.frame_id = "map"
         m.header.stamp = rospy.Time.now()
-
         m.id = self.id
         m.ns = "ring_marker"
         m.type = Marker.SPHERE
         m.action = Marker.ADD
-        m.pose = copy.deepcopy(self.pose)
+        m.pose = copy.deepcopy(self.obj_pose)
         m.pose.position.z = 0.2
         m.scale.x = 0.3
         m.scale.y = 0.3
@@ -373,16 +449,36 @@ class Ring:
         m.lifetime = rospy.Duration(0)
         return m
 
+    def to_navigation_marker(self):
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.type = Marker.ARROW
+        marker.action = Marker.ADD
+        marker.frame_locked = False
+        marker.lifetime = rospy.Duration(0)
+        marker.scale = Vector3(0.1, 0.1, 0.1)
+        marker.pose = self.navigation_pose
+        color = max(self.color, key=self.color.get)
+        color = map(lambda x: x / 255, color)
+        if self.n_detections > 1:
+            marker.color = ColorRGBA(*color, 1)
+        else:
+            marker.color = ColorRGBA(*color, 0.3)
+        marker.id = self.id + 100
+        marker.scale.x = 0.5
+        marker.scale.y = 0.1
+        marker.scale.z = 0
+        return marker
+
     def to_text(self):
         m = Marker()
         m.header.frame_id = "map"
         m.header.stamp = rospy.Time.now()
-
         m.id = self.id
         m.ns = "ring_n_detections_markers"
         m.type = Marker.TEXT_VIEW_FACING
         m.action = Marker.ADD
-        m.pose = copy.deepcopy(self.pose)
+        m.pose = copy.deepcopy(self.obj_pose)
         m.pose.position.z = 1
         m.scale.x = 0.3
         m.scale.y = 0.3
@@ -396,17 +492,41 @@ class Ring:
         m.text = str(self.n_detections)
         return m
 
-    def to_pose(self):
-        pose = copy.deepcopy(self.pose)
-        pose.position.z = 0
-        return pose
-
     def get_color_name(self):
         return max(self.color_name, key=self.color_name.get)
 
     def calculate_pose(self):
-        self.pose.position.x = np.mean(self.x)
-        self.pose.position.y = np.mean(self.y)
+        self.obj_pose.position.x = np.mean(self.remove_outlier(self.ox))
+        self.obj_pose.position.y = np.mean(self.remove_outlier(self.oy))
+        self.navigation_pose.position.x = np.mean(self.remove_outlier(self.nx))
+        self.navigation_pose.position.y = np.mean(self.remove_outlier(self.ny))
+
+    def calculate_rotations(self):
+        angle = np.mean(self.remove_outlier(self.na))
+        self.navigation_pose.orientation = self.euler_to_quaternion(angle)
+
+    def quaternion_to_euler(self, pose):
+        return tf.transformations.euler_from_quaternion(
+            [
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w,
+            ]
+        )[2]
+
+    def euler_to_quaternion(self, angle):
+        return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
+
+    def remove_outlier(self, array, max_deviation=2):
+        mean = np.mean(array)
+        std = np.std(array)
+        distance_from_mean = abs(array - mean)
+        not_outlier = distance_from_mean < max_deviation * std
+        filtered = np.array(array)[not_outlier]
+        if len(filtered) == 0:
+            filtered = [array[0]]
+        return filtered
 
 
 if __name__ == "__main__":
