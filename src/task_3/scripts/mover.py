@@ -21,7 +21,7 @@ from nav_msgs.srv import GetPlan
 from actionlib_msgs.msg import GoalID
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
-from task_3.msg import PoseAndColorArray
+from task_3.msg import PoseAndColorArray, FaceDataArray
 from task_3.srv import TextToSpeechService, TextToSpeechServiceResponse
 from kobuki_msgs.msg import BumperEvent
 
@@ -72,6 +72,8 @@ class Mover:
             "moving_to_waypoint",
             "move_to_cylinder",
             "moving_to_cylinder",
+            "move_to_face",
+            "moving_to_face",
             "move_to_ring",
             "moving_to_ring",
             "return_to_stored_pose",
@@ -114,11 +116,13 @@ class Mover:
             "/cylinder_pose", PoseAndColorArray, self.cylinder_sub_callback
         )
         self.ring_sub = rospy.Subscriber("/ring_pose", PoseAndColorArray, self.ring_sub_callback)
+        self.face_sub = rospy.Subscriber("/face_pose", FaceDataArray, self.face_sub_callback)
         self.bumper_sub = rospy.Subscriber(
             "/mobile_base/events/bumper", BumperEvent, self.bumper_callback
         )
 
         print(self.params)
+        rospy.sleep(5)
         self.run()
 
     def run(self):
@@ -140,20 +144,9 @@ class Mover:
                     "return_home",
                     "end",
                 )
-                and self.cylinders.is_new_data()
+                and self.faces.is_new_data()
             ):
-                self.state = "move_to_cylinder"
-            elif (
-                self.state
-                in (
-                    "get_next_waypoint",
-                    "moving_to_waypoint",
-                    "return_home",
-                    "end",
-                )
-                and self.rings.is_new_data()
-            ):
-                self.state = "move_to_ring"
+                self.state = "move_to_face"
 
             if self.state == "get_next_waypoint":
                 if len(self.waypoints.poses) > 0:
@@ -176,15 +169,7 @@ class Mover:
                     self.state = "return_home"
 
             elif self.state == "move_to_cylinder":
-                self.cancel_goal_pub.publish(GoalID())
-                rospy.sleep(1)
-                self.stored_pose = self.get_current_pose()
-                if len(self.visited_waypoints) > 0:
-                    last_waypoint = self.visited_waypoints.pop()
-                    self.waypoints.poses.append(last_waypoint)
-                if len(self.waypoint_markers.markers) > 0:
-                    self.waypoint_markers.markers.pop()
-                self.fade_markers()
+                self.interupt_plan()
                 cylinder = self.cylinders.get_last()
                 self.move_to_cylinder(cylinder, self.params["distance_to_cylinder"])
                 self.state = "moving_to_cylinder"
@@ -193,15 +178,7 @@ class Mover:
                 self.approach_cylinder(self.cylinders.current)
 
             elif self.state == "move_to_ring":
-                self.cancel_goal_pub.publish(GoalID())
-                rospy.sleep(1)
-                self.stored_pose = self.get_current_pose()
-                if len(self.visited_waypoints) > 0:
-                    last_waypoint = self.visited_waypoints.pop()
-                    self.waypoints.poses.append(last_waypoint)
-                if len(self.waypoint_markers.markers) > 0:
-                    self.waypoint_markers.markers.pop()
-                self.fade_markers()
+                self.interupt_plan()
                 ring = self.rings.get_last()
                 self.move_to_ring(ring, self.params["distance_to_ring"])
                 self.state = "moving_to_ring"
@@ -209,12 +186,28 @@ class Mover:
             elif self.state == "approach_ring":
                 self.approach_ring(self.rings.current)
 
+            elif self.state == "move_to_face":
+                self.interupt_plan()
+                face = self.faces.get_last()
+                self.move_to_face(face)
+                self.state = "moving_to_face"
             elif self.state == "return_to_stored_pose":
                 self.pose_pub.publish(self.stored_pose)
                 self.stored_pose = None
                 self.state = "moving_to_waypoint"
             elif self.state == "end":
                 break
+
+    def interupt_plan(self):
+        self.cancel_goal_pub.publish(GoalID())
+        rospy.sleep(1)
+        self.stored_pose = self.get_current_pose()
+        if len(self.visited_waypoints) > 0:
+            last_waypoint = self.visited_waypoints.pop()
+            self.waypoints.poses.append(last_waypoint)
+        if len(self.waypoint_markers.markers) > 0:
+            self.waypoint_markers.markers.pop()
+        self.fade_markers()
 
     def get_current_pose(self) -> PoseStamped:
         pose_translation = None
@@ -714,6 +707,16 @@ class Mover:
 
         print()
 
+    def move_to_face(self, face):
+        msg = PoseStamped()
+        msg.header.seq = self.faces.current.id
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = "map"
+        msg.pose = face.navigation_pose
+
+        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
+        self.pose_pub.publish(msg)
+
     def fade_markers(self):
         for e in self.waypoint_markers.markers:
             e.color.a = 0.3
@@ -812,6 +815,11 @@ class Mover:
                 else:
                     self.rings.cancel_counter = 0
                     self.state = "return_to_stored_pose"
+                self.state = "return_to_stored_pose"
+        elif self.state == "moving_to_face":
+            if res_state in (3, 4):
+                rospy.sleep(5)
+                self.state = "return_to_stored_pose"
         elif self.state == "return_home":
             if res_state == 3:
                 self.state = "end"
@@ -819,14 +827,15 @@ class Mover:
 
     def cylinder_sub_callback(self, data):
         for e in data.data:
-            if e.id not in self.cylinders.ids:
-                self.cylinders.add(Cylinder(e.id, e.pose, e.color))
+            self.cylinders.add(Cylinder(e.id, e.pose, e.color))
 
     def ring_sub_callback(self, data):
         for e in data.data:
-            if e.id not in self.rings.ids:
-                self.rings.add(Ring(e.id, e.pose, e.color))
-        print(self.rings, self.rings.data)
+            self.rings.add(Ring(e.id, e.pose, e.color))
+
+    def face_sub_callback(self, data):
+        for e in data.data:
+            self.faces.add(Face(e.id, e.face_pose, e.navigation_pose, e.mask))
 
     def bumper_callback(self, data):
         if data.state == 1:
@@ -835,28 +844,32 @@ class Mover:
 
 class ObjectContainer:
     def __init__(self):
-        self.data = list()
-        self.new_entry = 0
+        self.data = dict()
+        self.new_entrys = list()
         self.last_id = -1
         self.cancel_counter = 0
         self.ids = set()
         self.current = None
 
     def is_new_data(self):
-        return self.new_entry > 0
+        return len(self.new_entrys) > 0
 
     def get_last(self):
-        if self.new_entry > 0:
-            self.current = self.data[-self.new_entry]
+        if len(self.new_entrys) > 0:
+            self.current = self.data[self.new_entrys.pop()]
             self.last_id = self.current.id
-            self.new_entry -= 1
             return self.current
         return None
 
     def add(self, obj):
-        self.data.append(obj)
-        self.ids.add(obj.id)
-        self.new_entry += 1
+        if obj.id in self.data.keys():
+            self.update(obj)
+        else:
+            self.data[obj.id] = obj
+            self.new_entrys.append(obj.id)
+
+    def update(self, obj):
+        self.data[obj.id].update(obj)
 
 
 class Cylinder:
@@ -865,6 +878,10 @@ class Cylinder:
         self.pose = pose
         self.color = color
 
+    def update(self, obj):
+        self.pose = obj.pose
+        self.color = obj.color
+
 
 class Ring:
     def __init__(self, id, pose, color):
@@ -872,10 +889,21 @@ class Ring:
         self.pose = pose
         self.color = color
 
+    def update(self, obj):
+        self.pose = obj.pose
+        self.color = obj.color
+
 
 class Face:
-    def __init__(self, id):
+    def __init__(self, id, face_pose, navigation_pose, mask):
         self.id = id
+        self.face_pose = face_pose
+        self.navigation_pose = navigation_pose
+        self.mask = mask
+
+    def update(self, obj):
+        self.face_pose = obj.face_pose
+        self.navigation_pose = obj.navigation_pose
 
 
 if __name__ == "__main__":
