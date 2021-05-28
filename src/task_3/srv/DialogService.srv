@@ -1,0 +1,6 @@
+int32 dummy
+---
+bool already_vaccinated
+string doctor
+int32 hours_of_exercise
+bool wants_vaccine

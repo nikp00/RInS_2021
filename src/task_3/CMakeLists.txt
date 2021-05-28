@@ -77,6 +77,7 @@ add_message_files(
   PoseAndColorArray.msg
   FaceData.msg
   FaceDataArray.msg
+
 )
 
 ## Generate services in the 'srv' folder
@@ -85,6 +86,7 @@ add_service_files(
   TextToSpeechService.srv
   ColorClassifierService.srv
   GetNormalService.srv
+  DialogService.srv
 )
 
 ## Generate actions in the 'action' folder
