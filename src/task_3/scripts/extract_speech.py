@@ -16,6 +16,7 @@ import rospy
 import speech_recognition as sr
 
 from task_3.srv import DialogService, DialogServiceResponse
+from task_3.srv import TextToSpeechService, TextToSpeechServiceResponse
 
 class SpeechTranscriber:
     def __init__(self):
@@ -44,7 +45,13 @@ class SpeechTranscriber:
         self.negative_answers = ["no", "not", "i don't"]
         self.doctors = ["green", "red", "blue", "black"]
 
-        self.sr.dynamic_energy_threshold = False    
+        self.sr.dynamic_energy_threshold = False
+
+        print("----")
+        print("Waiting for text to speech service...")
+        rospy.wait_for_service("text_to_speech")
+        self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
+        print("Connected")
 
 
     #prilagodi mikrofon glede na hrup
@@ -59,6 +66,7 @@ class SpeechTranscriber:
     def promptAndListen(self, prompt_message):
         with self.mic as source:           
             print(prompt_message)
+            self.speak(prompt_message)
             audio = self.sr.listen(source)
             #audio = self.sr.listen(source, timeout = 4)
            
@@ -66,6 +74,7 @@ class SpeechTranscriber:
         recognized_text = ''
         try:
             recognized_text = self.sr.recognize_google(audio)
+            #recognized_text = self.sr.recognize_bing(audio)
         except sr.RequestError as e:
             print('API is probably unavailable', e)
             return -1
@@ -75,7 +84,7 @@ class SpeechTranscriber:
 
         print("Recognized: ", recognized_text)
             
-        return recognized_text
+        return recognized_text.lower()
      
 
     # vpraša uporabnika dano vprašanje in čaka na odgovor, če odgovor vsebuje besedo iz seznama legalnih odgovorov vrne odgovor, čene vpraša ponovno
@@ -89,18 +98,23 @@ class SpeechTranscriber:
                 answer = self.promptAndListen(question)
                 if answer == -1:
                     print("Sorry, please try again")
+                    self.speak("Sorry, please try again")
                     continue
             else:
+                self.speak("Please provide an answear manually: ")
                 answer = input("Please provide an answear manually: ")
 
 
             if legal_answers == "positive integer":
-                #print("expecting uint!")
-                #if answer.isdigit:
-                if answer.isnumeric():
-                    return answer
+                #check if answer contains a number
+                if any(char.isdigit() for char in answer):
+                    #extract number from answer
+                    number = int("".join(filter(str.isdigit, answer)))
+                    if number > 0:
+                        return number
                 else:
                     print("Please provide a positive integer number")
+                    self.speak("Please provide a positive integer number")
 
             #elif any (element in answer for element in legal_answers):
             else:
@@ -109,7 +123,15 @@ class SpeechTranscriber:
                         #print("Detected match: ", element)
                         return answer
 
+            self.speak("Sorry, please try again")
             print("Sorry, please try again")
+            
+
+    def say(self, s):
+        print(s)
+        response = self.speak(s)
+        rospy.sleep(response.response)
+
 
 
     #glavna funkcija 
@@ -118,7 +140,10 @@ class SpeechTranscriber:
 
         print("-------NEW REQUEST-------")
 
-        self.adjustMicrophone()         
+        self.adjustMicrophone()
+
+        self.speak("Hello")
+        print("Hello")
 
         already_vaccinated_answer = self.askUser("Have you been vaccinated?", self.affirmative_answers + self.negative_answers)
         if any (element in already_vaccinated_answer for element in self.affirmative_answers):
@@ -141,6 +166,8 @@ class SpeechTranscriber:
             answers["wants vaccine"] = True
         else:
             answers["wants vaccine"] = False
+
+        self.speak("Thank you, that is it.")
 
         print("-------DONE-------") 
         
