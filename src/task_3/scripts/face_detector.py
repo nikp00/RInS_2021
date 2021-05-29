@@ -239,9 +239,8 @@ class FaceDetectorDNN:
                             (enc_available and face_recognition.compare_faces([e.enc], enc)[0])
                             or (mask > without_mask) == e.mask
                         ):
-                            e.color = ColorRGBA(0, 1, 1, 1)
                             e.add_pose(face_pose, navigation_pose)
-                            # e.calculate_pose()
+                            e.color = ColorRGBA(0, 1, 1, 1)
                             e.n_detections += 1
                             skip = True
                             break
@@ -303,16 +302,7 @@ class Face:
         self.oy.append(obj_pose.position.y)
         self.nx.append(navigation_pose.position.x)
         self.ny.append(navigation_pose.position.y)
-
         self.na.append(self.quaternion_to_euler(navigation_pose))
-        # self.obj_pose.position.x = (self.obj_pose.position.x + obj_pose.position.x) / 2
-        # self.obj_pose.position.y = (self.obj_pose.position.y + obj_pose.position.y) / 2
-        # self.navigation_pose.position.x = (
-        #     self.navigation_pose.position.x + navigation_pose.position.x
-        # ) / 2
-        # self.navigation_pose.position.y = (
-        #     self.navigation_pose.position.y + navigation_pose.position.y
-        # ) / 2
         self.calculate_pose()
         self.calculate_rotations()
 

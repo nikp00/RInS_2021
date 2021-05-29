@@ -168,23 +168,13 @@ class RingSegmentation:
             cv2.ellipse(m2, e2, (255, 255, 255), -1)
             m3 = m2 - m1
 
-            padding = 0
             np.set_printoptions(threshold=np.inf, precision=2)
 
             temp = cv2.bitwise_and(self.depth_image, self.depth_image, mask=m3)
             temp[temp == 0] = np.nan
             pose = self.get_pose(
                 e1,
-                np.nanmean(
-                    temp
-                    # np.ma.masked_equal(
-                    #     self.depth_image[
-                    #         x_min - padding : x_max + padding,
-                    #         y_min - padding : y_max + padding,
-                    #     ],
-                    #     0,
-                    # )
-                ),
+                np.nanmean(temp),
                 image_msg.header.stamp,
             )
 
@@ -204,8 +194,6 @@ class RingSegmentation:
         k_f = 554
 
         elipse_x = self.dims[1] / 2 - e[0][0]
-        elipse_y = self.dims[0] / 2 - e[0][1]
-
         angle_to_target = np.arctan2(elipse_x, k_f)
 
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
@@ -231,55 +219,38 @@ class RingSegmentation:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
-        base_pose = self.get_current_pose(stamp)
-        angle = tf.transformations.euler_from_quaternion(
-            [
-                base_pose.pose.orientation.x,
-                base_pose.pose.orientation.y,
-                base_pose.pose.orientation.z,
-                base_pose.pose.orientation.w,
-            ]
-        )[2]
-
-        angle = np.arctan2(
-            base_pose.pose.position.y - pose.position.y,
-            base_pose.pose.position.x - pose.position.x,
-        )
-
-        pose.orientation = Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
-
         return pose
 
     def calculate_navigation_pose(self, x, y):
-        print(x, y)
+        if np.isnan(x) or np.isnan(y):
+            return None
         grid_x = int((x - self.map_msg.info.origin.position.x) / self.map_msg.info.resolution)
         grid_y = self.map_msg.info.height - int(
             (y - self.map_msg.info.origin.position.y) / self.map_msg.info.resolution
         )
         cell = self.map[grid_y, grid_x]
         target = 0 if cell[0] == 100 else 100
-        print(cell, target)
 
         left = self.check_direction(grid_x, grid_y, dx=-1, target=target)
         top = self.check_direction(grid_x, grid_y, dy=1, target=target)
         right = self.check_direction(grid_x, grid_y, dx=1, target=target)
         bottom = self.check_direction(grid_x, grid_y, dy=-1, target=target)
 
-        print(f"left: {left}, top: {top}, right: {right}, bottom: {bottom}")
         dists = [e for e in [left, top, right, bottom] if e[2] != 0]
-        print("dists", dists)
         if len(dists) > 0:
             new_x, new_y, dist = min(dists, key=lambda x: x[2])
-            print(new_x, new_y, dist)
             if target == 0:
-                direction = (grid_x - new_x, grid_y - new_y)
-            else:
                 direction = (new_x - grid_x, new_y - grid_y)
+            else:
+                direction = (grid_x - new_x, grid_y - new_y)
 
-            print(direction)
+            magnitude = np.sqrt(np.power(direction[0], 2) + np.power(direction[1], 2))
 
-            grid_x = grid_x + direction[0] * 0.05 * 10
-            grid_y = grid_y + direction[1] * 0.05 * 10
+            dx = direction[0] / magnitude
+            dy = direction[1] / magnitude
+
+            grid_x = grid_x + dx * 0.05 * 200
+            grid_y = grid_y + dy * 0.05 * 200
 
             grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
             grid_x = grid_x * self.map_msg.info.resolution
@@ -292,10 +263,6 @@ class RingSegmentation:
             pose = Pose()
             pose.position = pt.point
 
-            print()
-            print()
-            print()
-
             angle = np.arctan2(
                 y - pose.position.y,
                 x - pose.position.x,
@@ -305,6 +272,7 @@ class RingSegmentation:
                 *list(tf.transformations.quaternion_from_euler(0, 0, angle))
             )
             return pose
+        return None
 
     def check_direction(self, x, y, dx=0, dy=0, target=0):
         start_x = x
@@ -320,30 +288,10 @@ class RingSegmentation:
         dist = np.sqrt(np.power(x - start_x, 2) + np.power(y - start_y, 2))
         return x, y, dist
 
-    def get_current_pose(self, time):
-        pose_translation = None
-        while pose_translation is None:
-            try:
-                pose_translation = self.tf_buf.lookup_transform(
-                    "map", "base_link", time, rospy.Duration(2)
-                )
-            except Exception as e:
-                print(e)
-
-        pose = PoseStamped()
-        pose.header.seq = 0
-        pose.header.stamp = rospy.Time.now()
-        pose.header.frame_id = "map"
-        pose.pose.position = Point(
-            pose_translation.transform.translation.x,
-            pose_translation.transform.translation.y,
-            0,
-        )
-        pose.pose.orientation = pose_translation.transform.rotation
-        return pose
-
     def add_ring(self, pose: Pose, res):
         navigation_pose = self.calculate_navigation_pose(pose.position.x, pose.position.y)
+        if navigation_pose == None:
+            return
         skip = False
         for e in self.rings:
             if (
@@ -380,7 +328,10 @@ class RingSegmentation:
 
         self.ring_pose_publisher.publish(
             PoseAndColorArray(
-                [PoseAndColor(e.navigation_pose, e.get_color_name(), e.id) for e in self.rings]
+                [
+                    PoseAndColor(e.obj_pose, e.navigation_pose, e.get_color_name(), e.id)
+                    for e in self.rings
+                ]
             )
         )
 
@@ -417,7 +368,7 @@ class Ring:
         self.color_name[color_name] += 1
 
     def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
-        # navigation_pose.position.z = 0
+        navigation_pose.position.z = 0
         self.ox.append(obj_pose.position.x)
         self.oy.append(obj_pose.position.y)
         self.nx.append(navigation_pose.position.x)

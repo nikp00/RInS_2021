@@ -136,17 +136,18 @@ class Mover:
             r.sleep()
             self.waypoint_markers_pub.publish(self.waypoint_markers)
 
-            if (
-                self.state
-                in (
-                    "get_next_waypoint",
-                    "moving_to_waypoint",
-                    "return_home",
-                    "end",
-                )
-                and self.faces.is_new_data()
+            if self.state in (
+                "get_next_waypoint",
+                "moving_to_waypoint",
+                "return_home",
+                "end",
             ):
-                self.state = "move_to_face"
+                if self.faces.is_new_data():
+                    self.state = "move_to_face"
+                elif self.rings.is_new_data():
+                    self.state = "move_to_ring"
+                elif self.cylinders.is_new_data():
+                    self.state = "move_to_cylinder"
 
             if self.state == "get_next_waypoint":
                 if len(self.waypoints.poses) > 0:
@@ -171,16 +172,16 @@ class Mover:
             elif self.state == "move_to_cylinder":
                 self.interupt_plan()
                 cylinder = self.cylinders.get_last()
-                self.move_to_cylinder(cylinder, self.params["distance_to_cylinder"])
+                self.move_to_cylinder(cylinder)
                 self.state = "moving_to_cylinder"
 
-            elif self.state == "approach_cylinder":
-                self.approach_cylinder(self.cylinders.current)
+            # elif self.state == "approach_cylinder":
+            #     self.approach_cylinder(self.cylinders.current)
 
             elif self.state == "move_to_ring":
                 self.interupt_plan()
                 ring = self.rings.get_last()
-                self.move_to_ring(ring, self.params["distance_to_ring"])
+                self.move_to_ring(ring)
                 self.state = "moving_to_ring"
 
             elif self.state == "approach_ring":
@@ -295,27 +296,15 @@ class Mover:
         msg.pose.orientation = waypoint.orientation
         self.pose_pub.publish(msg)
 
-    def move_to_cylinder(self, cylinder, distance_to_cylinder: int):
+    def move_to_cylinder(self, cylinder):
         msg = PoseStamped()
         msg.header.seq = self.cylinders.current.id
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = "map"
-
-        angle = self.to_euler(cylinder.pose.orientation)
-
-        d = 0.05 * distance_to_cylinder
-
-        msg.pose.position = Point(
-            cylinder.pose.position.x + d * math.cos(angle),
-            cylinder.pose.position.y + d * math.sin(angle),
-            0,
-        )
-
-        msg.pose.orientation = self.fix_angle(cylinder.pose, msg)
-
-        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
+        msg.pose = cylinder.navigation_pose
 
         self.pose_pub.publish(msg)
+        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
 
     def approach_cylinder(self, cylinder):
         color = cylinder.color
@@ -515,27 +504,15 @@ class Mover:
         )
         print()
 
-    def move_to_ring(self, ring, distance_to_ring=10):
+    def move_to_ring(self, ring):
         msg = PoseStamped()
         msg.header.seq = self.rings.current.id
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = "map"
-
-        angle = self.to_euler(ring.pose.orientation)
-
-        d = 0.05 * distance_to_ring
-
-        msg.pose.position = Point(
-            ring.pose.position.x + d * math.cos(angle),
-            ring.pose.position.y + d * math.sin(angle),
-            0,
-        )
-
-        msg.pose.orientation = self.fix_angle(ring.pose, msg)
-
-        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
+        msg.pose = ring.navigation_pose
 
         self.pose_pub.publish(msg)
+        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
 
     def approach_ring(self, ring):
         cv_image = self.bridge.imgmsg_to_cv2(
@@ -714,9 +691,7 @@ class Mover:
         msg.header.frame_id = "map"
         msg.pose = face.navigation_pose
 
-        self.waypoint_markers.markers.append(
-            self.create_marker(self.seq + 100, msg.pose, b=1)
-        )
+        self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
         self.pose_pub.publish(msg)
 
     def fade_markers(self):
@@ -780,43 +755,12 @@ class Mover:
                 print(self.state, 3)
                 self.fade_markers()
         elif self.state == "moving_to_cylinder":
-            self.fade_markers()
-            if res_state == 3:
-                self.state = "approach_cylinder"
-                self.seq += 1
-            elif res_state == 4:
-                self.seq += 1
-                if self.cylinders.cancel_counter < 2:
-                    self.cylinders.cancel_counter += 1
-                    cylinder = self.cylinders.current.pose
-                    self.waypoint_markers.markers.pop()
-                    self.move_to_cylinder(
-                        cylinder,
-                        self.params["distance_to_cylinder"] + self.cylinders.cancel_counter * 5,
-                    )
-                else:
-                    self.cylinders.cancel_counter = 0
-                    self.state = "return_to_stored_pose"
+            if res_state in (3, 4):
+                rospy.sleep(5)
+            self.state = "return_to_stored_pose"
         elif self.state == "moving_to_ring":
-            if res_state == 3:
-                print(res_state)
-                self.fade_markers()
-                self.seq += 1
-                self.state = "approach_ring"
-            elif res_state == 4:
-                self.fade_markers()
-                self.seq += 1
-                if self.rings.cancel_counter < 2:
-                    self.rings.cancel_counter += 1
-                    ring = self.rings.current.pose
-                    self.waypoint_markers.markers.pop()
-                    self.move_to_ring(
-                        ring,
-                        self.params["distance_to_ring"] + self.rings["cancel_counter"] * 5,
-                    )
-                else:
-                    self.rings.cancel_counter = 0
-                    self.state = "return_to_stored_pose"
+            if res_state in (3, 4):
+                rospy.sleep(5)
                 self.state = "return_to_stored_pose"
         elif self.state == "moving_to_face":
             if res_state in (3, 4):
@@ -829,15 +773,15 @@ class Mover:
 
     def cylinder_sub_callback(self, data):
         for e in data.data:
-            self.cylinders.add(Cylinder(e.id, e.pose, e.color))
+            self.cylinders.add(Cylinder(e.id, e.obj_pose, e.navigation_pose, e.color))
 
     def ring_sub_callback(self, data):
         for e in data.data:
-            self.rings.add(Ring(e.id, e.pose, e.color))
+            self.rings.add(Ring(e.id, e.obj_pose, e.navigation_pose, e.color))
 
     def face_sub_callback(self, data):
         for e in data.data:
-            self.faces.add(Face(e.id, e.face_pose, e.navigation_pose, e.mask))
+            self.faces.add(Face(e.id, e.obj_pose, e.navigation_pose, e.mask))
 
     def bumper_callback(self, data):
         if data.state == 1:
@@ -847,18 +791,18 @@ class Mover:
 class ObjectContainer:
     def __init__(self):
         self.data = dict()
-        self.new_entrys = list()
+        self.new_entry = list()
         self.last_id = -1
         self.cancel_counter = 0
         self.ids = set()
         self.current = None
 
     def is_new_data(self):
-        return len(self.new_entrys) > 0
+        return len(self.new_entry) > 0
 
     def get_last(self):
-        if len(self.new_entrys) > 0:
-            self.current = self.data[self.new_entrys.pop()]
+        if len(self.new_entry) > 0:
+            self.current = self.data[self.new_entry.pop()]
             self.last_id = self.current.id
             return self.current
         return None
@@ -868,43 +812,47 @@ class ObjectContainer:
             self.update(obj)
         else:
             self.data[obj.id] = obj
-            self.new_entrys.append(obj.id)
+            self.new_entry.append(obj.id)
 
     def update(self, obj):
         self.data[obj.id].update(obj)
 
 
 class Cylinder:
-    def __init__(self, id, pose, color):
+    def __init__(self, id, obj_pose, navigation_pose, color):
         self.id = id
-        self.pose = pose
+        self.obj_pose = obj_pose
+        self.navigation_pose = navigation_pose
         self.color = color
 
     def update(self, obj):
-        self.pose = obj.pose
+        self.obj_pose = obj.obj_pose
+        self.navigation_pose = obj.navigation_pose
         self.color = obj.color
 
 
 class Ring:
-    def __init__(self, id, pose, color):
+    def __init__(self, id, obj_pose, navigation_pose, color):
         self.id = id
-        self.pose = pose
+        self.obj_pose = obj_pose
+        self.navigation_pose = navigation_pose
         self.color = color
 
     def update(self, obj):
-        self.pose = obj.pose
+        self.obj_pose = obj.obj_pose
+        self.navigation_pose = obj.navigation_pose
         self.color = obj.color
 
 
 class Face:
-    def __init__(self, id, face_pose, navigation_pose, mask):
+    def __init__(self, id, obj_pose, navigation_pose, mask):
         self.id = id
-        self.face_pose = face_pose
+        self.obj_pose = obj_pose
         self.navigation_pose = navigation_pose
         self.mask = mask
 
     def update(self, obj):
-        self.face_pose = obj.face_pose
+        self.obj_pose = obj.obj_pose
         self.navigation_pose = obj.navigation_pose
 
 

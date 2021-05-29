@@ -11,14 +11,13 @@ from visualization_msgs.msg import MarkerArray, Marker
 
 from task_3.srv import ColorClassifierService, ColorClassifierServiceRequest
 from geometry_msgs.msg import (
-    PointStamped,
     Point,
+    Vector3,
     PoseStamped,
     Pose,
     Quaternion,
-    PoseArray,
 )
-from std_msgs.msg import ColorRGBA, Header
+from std_msgs.msg import ColorRGBA
 from task_3.msg import CylinderSegmentation, PoseAndColor, PoseAndColorArray
 
 
@@ -79,6 +78,15 @@ class CylinderHandler:
         pose.pose.orientation = pose_translation.transform.rotation
         return pose.pose
 
+    def calculate_direction_vector(self, x1, y1, x2, y2):
+        direction = (x1 - x2, y1 - y2)
+        magnitude = np.sqrt(np.power(direction[0], 2) + np.power(direction[1], 2))
+
+        dx = direction[0] / magnitude
+        dy = direction[1] / magnitude
+
+        return dx, dy
+
     def cylinder_callback(self, data: CylinderSegmentation):
         color = data.color
         point = data.point
@@ -101,49 +109,40 @@ class CylinderHandler:
         )[2]
 
         angle = np.arctan2(
-            base_pose.position.y - point.point.y,
-            base_pose.position.x - point.point.x,
+            point.point.y - base_pose.position.y,
+            point.point.x - base_pose.position.x,
         )
 
-        pose = PoseStamped()
-        pose.pose.position = point.point
-        pose.pose.orientation = Quaternion(
+        pose = Pose()
+        pose.position = point.point
+
+        dx, dy = self.calculate_direction_vector(
+            base_pose.position.x, base_pose.position.y, point.point.x, point.point.y
+        )
+        navigation_pose = Pose()
+        navigation_pose.position.x = point.point.x + dx * 0.4
+        navigation_pose.position.y = point.point.y + dy * 0.4
+        navigation_pose.orientation = Quaternion(
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )
 
-        if np.isnan(pose.pose.position.x) or res.color == "black":
+        if np.isnan(pose.position.x) or res.color == "black":
             return
 
-        pose.pose.position.z = 0
+        pose.position.z = 0
 
         skip = False
         for e in self.cylinders:
             if (
                 np.sqrt(
-                    np.power(pose.pose.position.x - e.pose.pose.position.x, 2)
-                    + np.power(pose.pose.position.y - e.pose.pose.position.y, 2)
+                    np.power(pose.position.x - e.obj_pose.position.x, 2)
+                    + np.power(pose.position.y - e.obj_pose.position.y, 2)
                 )
                 < 0.5
             ):
-                # e.pose.pose.position.x = float(
-                #     (e.pose.pose.position.x + pose.pose.position.x) / 2
-                # )
-                # e.pose.pose.position.y = float(
-                #     (e.pose.pose.position.y + pose.pose.position.y) / 2
-                # )
-                # e.pose.pose.position.z = float(
-                #     (e.pose.pose.position.z + pose.pose.position.z) / 2
-                # )
-                e.x.append(pose.pose.position.x)
-                e.y.append(pose.pose.position.y)
-                e.angle.append(angle)
-                e.calculate_pose()
-
-                e.pose.pose.orientation = pose.pose.orientation
-
+                e.add_pose(pose, navigation_pose)
                 e.color_name[res.color] += 1
                 e.color[(res.marker_color.r, res.marker_color.g, res.marker_color.b)] += 1
-
                 e.n_detections += 1
                 skip = True
                 break
@@ -151,7 +150,7 @@ class CylinderHandler:
         if not skip:
             cylinder = Cylinder(
                 pose,
-                angle,
+                navigation_pose,
                 (res.marker_color.r, res.marker_color.g, res.marker_color.b),
                 res.color,
                 self.seq,
@@ -159,37 +158,49 @@ class CylinderHandler:
             self.seq += 1
             self.cylinders.append(cylinder)
 
-        self.cylinder_marker_publisher.publish([e.to_marker() for e in self.cylinders])
+        self.cylinder_marker_publisher.publish(
+            [e.to_marker() for e in self.cylinders]
+            + [e.to_navigation_marker() for e in self.cylinders]
+        )
+
         self.n_detections_marker_publisher.publish([e.to_text() for e in self.cylinders])
-
-        poses = list()
-
-        for e in self.sent_ids:
-            for x in self.cylinders:
-                if x.id == e:
-                    poses.append(PoseAndColor(x.pose.pose, x.get_color_name(), x.id))
-
-        for e in self.cylinders:
-            if e.id not in self.sent_ids and e.n_detections > 1:
-                poses.append(PoseAndColor(e.pose.pose, e.get_color_name(), e.id))
-                self.sent_ids.append(e.id)
-
-        self.cylinder_pose_publisher.publish(PoseAndColorArray(poses))
+        self.cylinder_pose_publisher.publish(
+            PoseAndColorArray(
+                [
+                    PoseAndColor(e.obj_pose, e.navigation_pose, e.get_color_name(), e.id)
+                    for e in self.cylinders
+                ]
+            )
+        )
 
 
 class Cylinder:
-    def __init__(self, pose: PoseStamped, angle, color: tuple, color_name: str, id: int):
-        self.pose = pose
-        # self.color = Cylinder.colors["yellow"]  # color
-        self.x = [pose.pose.position.x]
-        self.y = [pose.pose.position.y]
-        self.angle = [angle]
+    def __init__(
+        self, obj_pose: Pose, navigation_pose: Pose, color: tuple, color_name: str, id: int
+    ):
+        self.obj_pose = obj_pose
+        self.navigation_pose = navigation_pose
+        self.ox = [obj_pose.position.x]
+        self.oy = [obj_pose.position.y]
+        self.nx = [navigation_pose.position.x]
+        self.ny = [navigation_pose.position.y]
+        self.na = [self.quaternion_to_euler(navigation_pose)]
         self.color = defaultdict(int)
         self.color[color] += 1
         self.id = id
         self.n_detections = 1
         self.color_name = defaultdict(int)
         self.color_name[color_name] += 1
+
+    def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
+        navigation_pose.position.z = 0
+        self.ox.append(obj_pose.position.x)
+        self.oy.append(obj_pose.position.y)
+        self.nx.append(navigation_pose.position.x)
+        self.ny.append(navigation_pose.position.y)
+        self.na.append(self.quaternion_to_euler(navigation_pose))
+        self.calculate_pose()
+        self.calculate_rotations()
 
     def to_marker(self):
         m = Marker()
@@ -200,7 +211,7 @@ class Cylinder:
         m.ns = "cylinder_marker"
         m.type = Marker.CYLINDER
         m.action = Marker.ADD
-        m.pose = copy.deepcopy(self.pose.pose)
+        m.pose = copy.deepcopy(self.obj_pose)
         m.pose.position.z = 0.2
         m.scale.x = 0.3
         m.scale.y = 0.3
@@ -216,6 +227,27 @@ class Cylinder:
         m.lifetime = rospy.Duration(0)
         return m
 
+    def to_navigation_marker(self):
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.type = Marker.ARROW
+        marker.action = Marker.ADD
+        marker.frame_locked = False
+        marker.lifetime = rospy.Duration(0)
+        marker.scale = Vector3(0.1, 0.1, 0.1)
+        marker.pose = self.navigation_pose
+        color = max(self.color, key=self.color.get)
+        color = map(lambda x: x / 255, color)
+        if self.n_detections > 1:
+            marker.color = ColorRGBA(*color, 1)
+        else:
+            marker.color = ColorRGBA(*color, 0.3)
+        marker.id = self.id + 100
+        marker.scale.x = 0.5
+        marker.scale.y = 0.1
+        marker.scale.z = 0
+        return marker
+
     def to_text(self):
         m = Marker()
         m.header.frame_id = "map"
@@ -225,7 +257,7 @@ class Cylinder:
         m.ns = "cylinder_n_detections_markers"
         m.type = Marker.TEXT_VIEW_FACING
         m.action = Marker.ADD
-        m.pose = copy.deepcopy(self.pose.pose)
+        m.pose = copy.deepcopy(self.obj_pose)
         m.pose.position.z = 1
         m.scale.x = 0.3
         m.scale.y = 0.3
@@ -243,12 +275,37 @@ class Cylinder:
         return max(self.color_name, key=self.color_name.get)
 
     def calculate_pose(self):
-        self.pose.pose.position.x = np.mean(self.x)
-        self.pose.pose.position.y = np.mean(self.y)
-        # self.pose.pose.orientation = Quaternion(
-        #     *list(tf.transformations.quaternion_from_euler(0, 0, np.mean(self.angle)))
-        # )
-        # print(self.angle)
+        self.obj_pose.position.x = np.mean(self.remove_outlier(self.ox))
+        self.obj_pose.position.y = np.mean(self.remove_outlier(self.oy))
+        self.navigation_pose.position.x = np.mean(self.remove_outlier(self.nx))
+        self.navigation_pose.position.y = np.mean(self.remove_outlier(self.ny))
+
+    def calculate_rotations(self):
+        angle = np.mean(self.remove_outlier(self.na))
+        self.navigation_pose.orientation = self.euler_to_quaternion(angle)
+
+    def quaternion_to_euler(self, pose):
+        return tf.transformations.euler_from_quaternion(
+            [
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w,
+            ]
+        )[2]
+
+    def euler_to_quaternion(self, angle):
+        return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
+
+    def remove_outlier(self, array, max_deviation=2):
+        mean = np.mean(array)
+        std = np.std(array)
+        distance_from_mean = abs(array - mean)
+        not_outlier = distance_from_mean < max_deviation * std
+        filtered = np.array(array)[not_outlier]
+        if len(filtered) == 0:
+            filtered = [array[0]]
+        return filtered
 
 
 if __name__ == "__main__":

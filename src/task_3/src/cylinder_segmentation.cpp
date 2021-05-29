@@ -243,7 +243,7 @@ int main(int argc, char **argv)
     nh.param<double>("min_z", min_z, 0.2);
     nh.param<double>("max_z", max_z, 2.0);
     // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe("input", 1, cloud_cb);
+    ros::Subscriber sub = nh.subscribe("/camera/depth/points", 1, cloud_cb);
 
     // Create a ROS publisher for the output point cloud
     pubx = nh.advertise<pcl::PCLPointCloud2>("planes", 1);
