@@ -9,7 +9,6 @@ pip3 install SpeechRecognition
 """
 
 
-
 import roslib
 import time
 import rospy
@@ -18,15 +17,16 @@ import speech_recognition as sr
 from task_3.srv import DialogService, DialogServiceResponse
 from task_3.srv import TextToSpeechService, TextToSpeechServiceResponse
 
+
 class SpeechTranscriber:
     def __init__(self):
-        #rospy.init_node('speech_transcriber', anonymous=True)
+        # rospy.init_node('speech_transcriber', anonymous=True)
 
         # The documentation is here: https://github.com/Uberi/speech_recognition
 
         # The main interface to the speech recognition engines
         self.sr = sr.Recognizer()
-        
+
         # These are the methods that are available to us for recognition.
         # Please note that most of them use an internet connection and currently they are using
         # a default API user/pass, so there are restrictions on the number of requests we can make.
@@ -37,7 +37,7 @@ class SpeechTranscriber:
         # recognize_ibm(): IBM Speech to Text
         # recognize_sphinx(): CMU Sphinx - requires installing PocketSphinx
         # recognize_wit(): Wit.ai
-        
+
         # An interface to the default microphone
         self.mic = sr.Microphone()
 
@@ -53,47 +53,44 @@ class SpeechTranscriber:
         self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
         print("Connected")
 
-
-    #prilagodi mikrofon glede na hrup
+    # prilagodi mikrofon glede na hrup
     def adjustMicrophone(self):
         with self.mic as source:
-            print('Adjusting mic for ambient noise...')
+            print("Adjusting mic for ambient noise...")
             self.sr.adjust_for_ambient_noise(source)
         self.sr.dynamic_energy_threshold = False
 
-
-    #izpise prompt message in prepozna odgovor preko mikrofona
+    # izpise prompt message in prepozna odgovor preko mikrofona
     def promptAndListen(self, prompt_message):
-        with self.mic as source:           
-            print(prompt_message)
-            self.speak(prompt_message)
+        self.speak(prompt_message)
+        print(prompt_message)
+        with self.mic as source:
             audio = self.sr.listen(source)
-            #audio = self.sr.listen(source, timeout = 4)
-           
-        print('Processing...')
-        recognized_text = ''
+            # audio = self.sr.listen(source, timeout = 4)
+
+        print("Processing...")
+        recognized_text = ""
         try:
             recognized_text = self.sr.recognize_google(audio)
-            #recognized_text = self.sr.recognize_bing(audio)
+            # recognized_text = self.sr.recognize_bing(audio)
         except sr.RequestError as e:
-            print('API is probably unavailable', e)
+            print("API is probably unavailable", e)
             return -1
         except sr.UnknownValueError:
-            print('Did not manage to recognize anything.')
+            print("Did not manage to recognize anything.")
             return -1
 
         print("Recognized: ", recognized_text)
-            
+
         return recognized_text.lower()
-     
 
     # vpraša uporabnika dano vprašanje in čaka na odgovor, če odgovor vsebuje besedo iz seznama legalnih odgovorov vrne odgovor, čene vpraša ponovno
     # če ptevilo neuspelih poskusov preseže max_tries prosi za vnos preko konzole namesto prepoznave govora
-    def askUser(self, question, legal_answers, max_tries = 3):
+    def askUser(self, question, legal_answers, max_tries=3):
         answer = ""
         i = 0
-        while(True):
-            i+=1
+        while True:
+            i += 1
             if i <= max_tries:
                 answer = self.promptAndListen(question)
                 if answer == -1:
@@ -104,11 +101,10 @@ class SpeechTranscriber:
                 self.speak("Please provide an answear manually: ")
                 answer = input("Please provide an answear manually: ")
 
-
             if legal_answers == "positive integer":
-                #check if answer contains a number
+                # check if answer contains a number
                 if any(char.isdigit() for char in answer):
-                    #extract number from answer
+                    # extract number from answer
                     number = int("".join(filter(str.isdigit, answer)))
                     if number > 0:
                         return number
@@ -116,25 +112,22 @@ class SpeechTranscriber:
                     print("Please provide a positive integer number")
                     self.speak("Please provide a positive integer number")
 
-            #elif any (element in answer for element in legal_answers):
+            # elif any (element in answer for element in legal_answers):
             else:
                 for element in legal_answers:
                     if element in answer:
-                        #print("Detected match: ", element)
+                        # print("Detected match: ", element)
                         return answer
 
             self.speak("Sorry, please try again")
             print("Sorry, please try again")
-            
 
     def say(self, s):
         print(s)
         response = self.speak(s)
         rospy.sleep(response.response)
 
-
-
-    #glavna funkcija 
+    # glavna funkcija
     def dialog(self):
         answers = {}
 
@@ -145,32 +138,36 @@ class SpeechTranscriber:
         self.speak("Hello")
         print("Hello")
 
-        already_vaccinated_answer = self.askUser("Have you been vaccinated?", self.affirmative_answers + self.negative_answers)
-        if any (element in already_vaccinated_answer for element in self.affirmative_answers):
+        already_vaccinated_answer = self.askUser(
+            "Have you been vaccinated?", self.affirmative_answers + self.negative_answers
+        )
+        if any(element in already_vaccinated_answer for element in self.affirmative_answers):
             answers["already vaccinated"] = True
         else:
             answers["already vaccinated"] = False
-
 
         doctor_answer = self.askUser("Who is your doctor?", self.doctors)
         for doc in self.doctors:
             if doc in doctor_answer:
                 answers["doctor"] = doc
                 break
-        
-        excercise_answer = self.askUser("How many hours per week do you exercise?", "positive integer")
+
+        excercise_answer = self.askUser(
+            "How many hours per week do you exercise?", "positive integer"
+        )
         answers["hours of exercise"] = excercise_answer
 
-        wants_vaccine_answer = self.askUser("Do you want to be vaccinated?", self.affirmative_answers + self.negative_answers)
-        if any (element in wants_vaccine_answer for element in self.affirmative_answers):
+        wants_vaccine_answer = self.askUser(
+            "Do you want to be vaccinated?", self.affirmative_answers + self.negative_answers
+        )
+        if any(element in wants_vaccine_answer for element in self.affirmative_answers):
             answers["wants vaccine"] = True
         else:
             answers["wants vaccine"] = False
 
         self.speak("Thank you, that is it.")
 
-        print("-------DONE-------") 
-        
+        print("-------DONE-------")
 
         return answers
 
@@ -196,29 +193,14 @@ class Service:
 
     def callBack(self, request):
         answers = self.st.dialog()
-        return DialogServiceResponse(answers["already vaccinated"], answers["doctor"], int(answers["hours of exercise"]), answers["wants vaccine"])
-        #return DialogServiceResponse(True, "blue", 15, True)
+        return DialogServiceResponse(
+            answers["already vaccinated"],
+            answers["doctor"],
+            int(answers["hours of exercise"]),
+            answers["wants vaccine"],
+        )
+        # return DialogServiceResponse(True, "blue", 15, True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     Service()
-
-    
-    #st = SpeechTranscriber()
-    #answers = st.dialog()
-
-#    print(answers)
-    """
-    for i in range(3):
-        
-        text = st.recognize_speech()
-        print('I recognized this sentence:', text)
-        time.sleep(4)
-    
-    
-    while not rospy.is_shutdown():
-        text = st.recognize_speech()
-        print('I recognized this sentence:', text)
-        time.sleep(4)
-"""
-
