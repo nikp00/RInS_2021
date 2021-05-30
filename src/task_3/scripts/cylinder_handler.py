@@ -9,15 +9,19 @@ from collections import defaultdict
 
 from visualization_msgs.msg import MarkerArray, Marker
 
+from tf2_geometry_msgs import do_transform_point
 from task_3.srv import ColorClassifierService, ColorClassifierServiceRequest
 from geometry_msgs.msg import (
     Point,
     Vector3,
+    TransformStamped,
     PoseStamped,
+    PointStamped,
     Pose,
     Quaternion,
 )
 from std_msgs.msg import ColorRGBA
+from nav_msgs.msg import OccupancyGrid
 from task_3.msg import CylinderSegmentation, PoseAndColor, PoseAndColorArray
 
 
@@ -33,6 +37,14 @@ class CylinderHandler:
 
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
+
+        self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
+        self.map_transform = TransformStamped()
+        self.map_transform.transform.translation.x = self.map_msg.info.origin.position.x
+        self.map_transform.transform.translation.y = self.map_msg.info.origin.position.y
+        self.map_transform.transform.translation.z = self.map_msg.info.origin.position.z
+        self.map_transform.transform.rotation = self.map_msg.info.origin.orientation
+        self.occupancy_grid_to_img()
 
         # Publishers
         self.cylinder_marker_publisher = rospy.Publisher(
@@ -55,6 +67,81 @@ class CylinderHandler:
         )
 
         rospy.spin()
+
+    def occupancy_grid_to_img(self):
+        self.map = np.flip(
+            np.array([[e, e, e] for e in self.map_msg.data], dtype=np.uint8).reshape(
+                (self.map_msg.info.height, self.map_msg.info.width, 3)
+            ),
+            axis=0,
+        )
+
+    def calculate_navigation_pose(self, x, y):
+        if np.isnan(x) or np.isnan(y):
+            return None
+        grid_x = int((x - self.map_msg.info.origin.position.x) / self.map_msg.info.resolution)
+        grid_y = self.map_msg.info.height - int(
+            (y - self.map_msg.info.origin.position.y) / self.map_msg.info.resolution
+        )
+        cell = self.map[grid_y, grid_x]
+        target = 0 if cell[0] == 100 else 100
+
+        left = self.check_direction(grid_x, grid_y, dx=-1, target=target)
+        top = self.check_direction(grid_x, grid_y, dy=1, target=target)
+        right = self.check_direction(grid_x, grid_y, dx=1, target=target)
+        bottom = self.check_direction(grid_x, grid_y, dy=-1, target=target)
+
+        dists = [e for e in [left, top, right, bottom] if e[2] != 0]
+        if len(dists) > 0:
+            new_x, new_y, dist = min(dists, key=lambda x: x[2])
+            if target == 0:
+                direction = (new_x - grid_x, new_y - grid_y)
+            else:
+                direction = (grid_x - new_x, grid_y - new_y)
+
+            magnitude = np.sqrt(np.power(direction[0], 2) + np.power(direction[1], 2))
+
+            dx = direction[0] / magnitude
+            dy = direction[1] / magnitude
+
+            grid_x = grid_x + dx * 0.05 * 150
+            grid_y = grid_y + dy * 0.05 * 150
+
+            grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
+            grid_x = grid_x * self.map_msg.info.resolution
+            pt = PointStamped()
+            pt.point.x = grid_x
+            pt.point.y = grid_y
+            pt.point.z = 0
+            pt = do_transform_point(pt, self.map_transform)
+
+            pose = Pose()
+            pose.position = pt.point
+
+            angle = np.arctan2(
+                y - pose.position.y,
+                x - pose.position.x,
+            )
+
+            pose.orientation = Quaternion(
+                *list(tf.transformations.quaternion_from_euler(0, 0, angle))
+            )
+            return pose
+        return None
+
+    def check_direction(self, x, y, dx=0, dy=0, target=0):
+        start_x = x
+        start_y = y
+        while (
+            (0 < x < self.map.shape[1])
+            and (0 < y < self.map.shape[0])
+            and self.map[y, x][0] != target
+        ):
+            y += dy
+            x += dx
+
+        dist = np.sqrt(np.power(x - start_x, 2) + np.power(y - start_y, 2))
+        return x, y, dist
 
     def get_current_pose(self, time) -> Pose:
         pose_translation = None
@@ -116,15 +203,19 @@ class CylinderHandler:
         pose = Pose()
         pose.position = point.point
 
-        dx, dy = self.calculate_direction_vector(
-            base_pose.position.x, base_pose.position.y, point.point.x, point.point.y
-        )
-        navigation_pose = Pose()
-        navigation_pose.position.x = point.point.x + dx * 0.4
-        navigation_pose.position.y = point.point.y + dy * 0.4
-        navigation_pose.orientation = Quaternion(
-            *list(tf.transformations.quaternion_from_euler(0, 0, angle))
-        )
+        navigation_pose = self.calculate_navigation_pose(pose.position.x, pose.position.y)
+        if navigation_pose == None:
+            return
+
+        # dx, dy = self.calculate_direction_vector(
+        #     base_pose.position.x, base_pose.position.y, point.point.x, point.point.y
+        # )
+        # navigation_pose = Pose()
+        # navigation_pose.position.x = point.point.x + dx * 0.4
+        # navigation_pose.position.y = point.point.y + dy * 0.4
+        # navigation_pose.orientation = Quaternion(
+        #     *list(tf.transformations.quaternion_from_euler(0, 0, angle))
+        # )
 
         if np.isnan(pose.position.x) or res.color == "black":
             return

@@ -6,15 +6,17 @@
     <node name="mover" pkg="task_3" type="mover.py" output="screen" />
 
 
-    <!-- <node name="face_detector" pkg="task_3" type="face_detector.py" output="screen" args="$(find task_3)/data/faceNet/deploy.prototxt.txt $(find task_3)/data/faceNet/res10_300x300_ssd_iter_140000.caffemodel $(find task_3)/data/mask_detector/mask_detector.model" />
-    <node name="normal_finder" pkg="task_3" type="normal_finder" output="log" /> -->
+    <node name="face_detector" pkg="task_3" type="face_detector.py" output="screen" args="$(find task_3)/data/faceNet/deploy.prototxt.txt $(find task_3)/data/faceNet/res10_300x300_ssd_iter_140000.caffemodel $(find task_3)/data/mask_detector/mask_detector.model" />
+    <node name="normal_finder" pkg="task_3" type="normal_finder" output="log" />
 
 
     <node name="color_classifier" pkg="task_3" type="color_classifier.py" output="log" args="$(find task_3)/data/" />
-    <!-- <node name="ring_segmentation" pkg="task_3" type="ring_segmentation.py" output="screen" /> -->
+    <node name="ring_segmentation" pkg="task_3" type="ring_segmentation.py" output="screen" />
     <node name="cylinder_segmentation" pkg="task_3" type="cylinder_segmentation" output="log" />
     <node name="cylinder_handler" pkg="task_3" type="cylinder_handler.py" output="log" />
 
     <node name="move_arm" pkg="task_3" type="move_arm.py" output="log" />
     <node name="tts" pkg="task_3" type="tts.py" output="log" args="$(find task_3)/data/ $(find task_3)/data/ris-2021-e782e57981e3.json"></node>
+
+    <node name="qr_code_reader" pkg="task_3" type="qr_code_reader.py" output="screen" />
 </launch>

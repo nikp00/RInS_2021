@@ -47,6 +47,8 @@ class RingSegmentation:
         self.depth_image = None
         self.new_image = False
 
+        self.map = None
+
         self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
         self.map_transform = TransformStamped()
         self.map_transform.transform.translation.x = self.map_msg.info.origin.position.x

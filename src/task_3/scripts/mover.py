@@ -22,7 +22,7 @@ from actionlib_msgs.msg import GoalID
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from task_3.msg import PoseAndColorArray, FaceDataArray
-from task_3.srv import TextToSpeechService, TextToSpeechServiceResponse
+from task_3.srv import TextToSpeechService, QRCodeReaderService
 from kobuki_msgs.msg import BumperEvent
 
 
@@ -71,6 +71,7 @@ class Mover:
             "get_next_waypoint",
             "moving_to_waypoint",
             "move_to_cylinder",
+            "find_qr_code",
             "moving_to_cylinder",
             "move_to_face",
             "moving_to_face",
@@ -107,6 +108,8 @@ class Mover:
         self.get_plan = rospy.ServiceProxy("/move_base/make_plan", GetPlan)
         rospy.wait_for_service("text_to_speech")
         self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
+        rospy.wait_for_service("qr_code_reader")
+        self.read_qr_code = rospy.ServiceProxy("qr_code_reader", QRCodeReaderService)
 
         # Subscribers
         self.result_sub = rospy.Subscriber(
@@ -175,6 +178,8 @@ class Mover:
                 self.move_to_cylinder(cylinder)
                 self.state = "moving_to_cylinder"
 
+            elif self.state == "find_qr_code":
+                self.find_qr_code()
             # elif self.state == "approach_cylinder":
             #     self.approach_cylinder(self.cylinders.current)
 
@@ -305,6 +310,9 @@ class Mover:
 
         self.pose_pub.publish(msg)
         self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
+
+    def find_qr_code(self):
+        print()
 
     def approach_cylinder(self, cylinder):
         color = cylinder.color
@@ -754,18 +762,23 @@ class Mover:
                 self.state = "get_next_waypoint"
                 print(self.state, 3)
                 self.fade_markers()
+
         elif self.state == "moving_to_cylinder":
             if res_state in (3, 4):
                 rospy.sleep(5)
+                self.read_qr_code(0)
             self.state = "return_to_stored_pose"
+
         elif self.state == "moving_to_ring":
             if res_state in (3, 4):
                 rospy.sleep(5)
                 self.state = "return_to_stored_pose"
+
         elif self.state == "moving_to_face":
             if res_state in (3, 4):
                 rospy.sleep(5)
                 self.state = "return_to_stored_pose"
+
         elif self.state == "return_home":
             if res_state == 3:
                 self.state = "end"

@@ -37,28 +37,17 @@ pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>
 pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
 pcl::IntegralImageNormalEstimation<PointT, pcl::Normal> ne;
 
-// void cloud_cb(const pcl::PCLPointCloud2ConstPtr &cloud_blob)
-// {
-//     pcl::fromPCLPointCloud2(*cloud_blob, *cloud);
-// }
+void mark_point(int x, int y)
+{
+    cloud->at(x, y).r = 255;
+    cloud->at(x, y).g = 0;
+    cloud->at(x, y).b = 0;
+}
 
 bool find_normal(task_3::GetNormalService::Request &req, task_3::GetNormalService::Response &res)
 {
-
-    // pass.setKeepOrganized(true);
-    // pass.setInputCloud(cloud);
-    // pass.filter(*cloud_filtered);
-
-    // ne.setSearchMethod(tree);
-    // ne.setInputCloud(cloud_filtered);
-    // ne.setRadiusSearch(req.radius);
-    // ne.compute(*cloud_normals);
-
     pcl::PointCloud<pcl::PointXYZ> temp_cloud;
     pcl::fromROSMsg(req.cloud, *cloud);
-
-    // const pcl::PCLPointCloud2Ptr &cloud_blob = boost::make_shared<pcl::PCLPointCloud2Ptr>(req.cloud);
-    // pcl::fromPCLPointCloud2(temp_cloud, *cloud);
 
     ne.setNormalEstimationMethod(ne.AVERAGE_3D_GRADIENT);
     ne.setMaxDepthChangeFactor(0.02f);
@@ -76,9 +65,11 @@ bool find_normal(task_3::GetNormalService::Request &req, task_3::GetNormalServic
     std::cout << cloud_normals->at(req.x, req.y) << std::endl;
     pcl::Normal n = cloud_normals->at(req.x, req.y);
 
-    cloud->at(req.x, req.y).r = 255;
-    cloud->at(req.x, req.y).g = 0;
-    cloud->at(req.x, req.y).b = 0;
+    mark_point(req.x, req.y);
+    mark_point(req.x + 1, req.y);
+    mark_point(req.x - 1, req.y);
+    mark_point(req.x, req.y + 1);
+    mark_point(req.x, req.y - 1);
     pcl::PCLPointCloud2 outcloud;
     pcl::toPCLPointCloud2(*cloud, outcloud);
     pubx.publish(outcloud);
@@ -103,7 +94,7 @@ int main(int argc, char **argv)
     // For transforming between coordinate frames
     tf2_ros::TransformListener tf2_listener(tf2_buffer);
 
-    pubx = nh.advertise<pcl::PCLPointCloud2>("planes", 1);
+    pubx = nh.advertise<pcl::PCLPointCloud2>("face_normal_cloud", 1);
 
     ros::ServiceServer service = nh.advertiseService("get_normal", find_normal);
 

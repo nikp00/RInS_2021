@@ -11,6 +11,7 @@ import tf
 import face_recognition
 import copy
 import math
+import os
 
 import message_filters
 
@@ -127,15 +128,18 @@ class FaceDetectorDNN:
         face_pose = self.camera_to_world_point(x, y, stamp=stamp)
         navigation_pose = self.camera_to_world_point(x, y, nx=res.nx, nz=res.nz, stamp=stamp)
 
-        angle = np.arctan2(
-            face_pose.position.y - navigation_pose.position.y,
-            face_pose.position.x - navigation_pose.position.x,
+        angle = np.abs(
+            np.arctan2(
+                face_pose.position.y - navigation_pose.position.y,
+                face_pose.position.x - navigation_pose.position.x,
+            )
         )
 
         navigation_pose.orientation = Quaternion(
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )
 
+        print("Normal:", res.nx, res.nz, "angle", angle)
         return face_pose, navigation_pose
 
     def get_current_pose(self, time) -> Pose:
@@ -262,7 +266,7 @@ class FaceDetectorDNN:
         self.face_pose_publisher.publish(
             FaceDataArray(
                 [
-                    FaceData(e.navigation_pose, e.face_pose, e.mask, e.id)
+                    FaceData(e.navigation_pose, e.obj_pose, e.mask, e.id)
                     for e in self.faces
                     if e.n_detections > 1
                 ]
@@ -397,6 +401,7 @@ class Face:
 
 
 if __name__ == "__main__":
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     gpus = tensorflow.config.experimental.list_physical_devices("GPU")
     if gpus:
         try:
