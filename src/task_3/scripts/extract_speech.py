@@ -1,16 +1,7 @@
-#!/usr/bin/python3
 """
-sudo apt install libzbar0
 sudo apt install python3-pyaudio
-sudo apt install tesseract-ocr libtesseract-dev
-pip3 install pyzbar
-pip3 install pytesseract
 pip3 install SpeechRecognition
 """
-
-
-import roslib
-import time
 import rospy
 import speech_recognition as sr
 
@@ -20,30 +11,12 @@ from task_3.srv import TextToSpeechService, TextToSpeechServiceResponse
 
 class SpeechTranscriber:
     def __init__(self):
-        # rospy.init_node('speech_transcriber', anonymous=True)
-
-        # The documentation is here: https://github.com/Uberi/speech_recognition
-
-        # The main interface to the speech recognition engines
         self.sr = sr.Recognizer()
-
-        # These are the methods that are available to us for recognition.
-        # Please note that most of them use an internet connection and currently they are using
-        # a default API user/pass, so there are restrictions on the number of requests we can make.
-        # recognize_bing(): Microsoft Bing Speech
-        # recognize_google(): Google Web Speech API
-        # recognize_google_cloud(): Google Cloud Speech - requires installation of the google-cloud-speech package
-        # recognize_houndify(): Houndify by SoundHound
-        # recognize_ibm(): IBM Speech to Text
-        # recognize_sphinx(): CMU Sphinx - requires installing PocketSphinx
-        # recognize_wit(): Wit.ai
-
-        # An interface to the default microphone
         self.mic = sr.Microphone()
 
         self.affirmative_answers = ["yes", "i have", "i do"]
         self.negative_answers = ["no", "not", "i don't"]
-        self.doctors = ["green", "red", "blue", "black"]
+        self.doctors = ["green", "red", "blue", "black", "yellow"]
 
         self.sr.dynamic_energy_threshold = False
 
@@ -199,7 +172,6 @@ class Service:
             int(answers["hours of exercise"]),
             answers["wants vaccine"],
         )
-        # return DialogServiceResponse(True, "blue", 15, True)
 
 
 if __name__ == "__main__":

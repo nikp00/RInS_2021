@@ -1,3 +1,4 @@
+from cv2 import data
 import rospy
 import math
 import numpy as np
@@ -22,8 +23,18 @@ from actionlib_msgs.msg import GoalID
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from task_3.msg import PoseAndColorArray, FaceDataArray
-from task_3.srv import TextToSpeechService, QRCodeReaderService, ExtractDigitsService
+from task_3.srv import TextToSpeechService, QRCodeReaderService, ExtractDigitsService, DialogService
 from kobuki_msgs.msg import BumperEvent
+
+import requests
+import pandas as pd
+import io
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
 
 class Mover:
@@ -65,6 +76,9 @@ class Mover:
         self.starting_pose = None
         self.stored_pose = None
         self.image = None
+
+        # Face approach data
+        self.update_position = 0
 
         # States
         self.states = [
@@ -109,9 +123,11 @@ class Mover:
         rospy.wait_for_service("text_to_speech")
         self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
         rospy.wait_for_service("qr_code_reader")
-        self.read_qr_code = rospy.ServiceProxy("qr_code_reader", QRCodeReaderService)
+        self.extract_qr_code = rospy.ServiceProxy("qr_code_reader", QRCodeReaderService)
         rospy.wait_for_service("digit_extractor")
         self.extract_digits = rospy.ServiceProxy("digit_extractor", ExtractDigitsService)
+        rospy.wait_for_service("dialog_service")
+        self.dialog = rospy.ServiceProxy("dialog_service", DialogService)
 
         # Subscribers
         self.result_sub = rospy.Subscriber(
@@ -179,11 +195,8 @@ class Mover:
                 cylinder = self.cylinders.get_last()
                 self.move_to_cylinder(cylinder)
                 self.state = "moving_to_cylinder"
-
-            elif self.state == "find_qr_code":
-                self.find_qr_code()
-            # elif self.state == "approach_cylinder":
-            #     self.approach_cylinder(self.cylinders.current)
+            elif self.state == "read_qr_code":
+                self.read_qr_code()
 
             elif self.state == "move_to_ring":
                 self.interupt_plan()
@@ -199,6 +212,8 @@ class Mover:
                 face = self.faces.get_last()
                 self.move_to_face(face)
                 self.state = "moving_to_face"
+            elif self.state == "initial_dialog":
+                self.get_face_info()
             elif self.state == "read_digits":
                 print("Read digits")
                 self.read_digits()
@@ -317,18 +332,16 @@ class Mover:
         self.pose_pub.publish(msg)
         self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
 
-    def find_qr_code(self):
-        print()
-
-    def read_digits(self):
-        res = self.extract_digits(0)
+    def read_qr_code(self):
+        res = self.extract_qr_code(0)
         if res.status == 0:
-            print("Detected digits:", res.data)
+            print("Detected QR code:", res.data)
+            self.cylinders.current.add_clf(str(res.data))
             self.state = "return_to_stored_pose"
         else:
-            print("No digits found, fixing orientation")
+            print("No QR code found, fixing orientation")
             msg = Twist()
-            msg.angular.z = 0.1
+            msg.linear.x = 0.01
             self.twist_pub.publish(msg)
             rospy.sleep(1)
 
@@ -720,6 +733,28 @@ class Mover:
         self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
         self.pose_pub.publish(msg)
 
+    def get_face_info(self):
+        res = self.dialog(0)
+        msg = Twist()
+        msg.linear.x = -0.5
+        self.twist_pub.publish(msg)
+        rospy.sleep(1)
+        self.move_to_face(self.faces.current)
+        rospy.sleep(2)
+        self.state = "read_digits"
+
+    def read_digits(self):
+        res = self.extract_digits(0)
+        if res.status == 0:
+            print("Detected digits:", res.data)
+            self.state = "return_to_stored_pose"
+        else:
+            print("No digits found, fixing orientation")
+            msg = Twist()
+            msg.angular.z = 0.1
+            self.twist_pub.publish(msg)
+            rospy.sleep(1)
+
     def fade_markers(self):
         for e in self.waypoint_markers.markers:
             e.color.a = 0.3
@@ -783,11 +818,7 @@ class Mover:
 
         elif self.state == "moving_to_cylinder":
             if res_state in (3, 4):
-                rospy.sleep(2)
-                self.read_qr_code(0)
-                rospy.sleep(3)
-            self.state = "return_to_stored_pose"
-
+                self.state = "read_qr_code"
         elif self.state == "moving_to_ring":
             if res_state in (3, 4):
                 rospy.sleep(5)
@@ -795,7 +826,7 @@ class Mover:
 
         elif self.state == "moving_to_face":
             if res_state in (3, 4):
-                self.state = "read_digits"
+                self.state = "initial_dialog"
 
         elif self.state == "return_home":
             if res_state == 3:
@@ -861,6 +892,12 @@ class Cylinder:
         self.navigation_pose = obj.navigation_pose
         self.color = obj.color
 
+    def add_clf(self, url):
+        self.clf = VaccinePredictor(url)
+
+    def predict(self, age, hours_exercise):
+        return self.clf.predict(age, hours_exercise)
+
 
 class Ring:
     def __init__(self, id, obj_pose, navigation_pose, color):
@@ -885,6 +922,36 @@ class Face:
     def update(self, obj):
         self.obj_pose = obj.obj_pose
         self.navigation_pose = obj.navigation_pose
+
+
+class VaccinePredictor:
+    def __init__(self, url):
+        self.url = url
+        self.prep_data()
+        self.train()
+
+    def prep_data(self):
+        self.data = pd.read_csv(
+            io.StringIO(requests.get(self.url).content.decode("utf-8")),
+            names=["age", "hours_exercise", "right_vaccine"],
+        )
+        self.le = LabelEncoder()
+        self.data["right_vaccine_enc"] = self.le.fit_transform(self.data["right_vaccine"])
+        self.X = self.data.drop(columns=["right_vaccine", "right_vaccine_enc"])
+        self.y = self.data.drop(columns=["age", "hours_exercise", "right_vaccine"])
+
+    def train(self):
+        X_train, X_test, y_train, y_test = train_test_split(
+            self.X, self.y, test_size=0.3, random_state=42
+        )
+        self.clf = DecisionTreeClassifier()
+        self.clf.fit(X_train, y_train)
+        y_pred_test = self.clf.predict(X_test)
+        print(f"Accuracy on test dataset: {accuracy_score(y_test, y_pred_test)}")
+
+    def predict(self, age, hours_exercise):
+        res = self.clf.predict([[56.56565656565657, 21.224489795918366]])
+        return self.le.inverse_transform(res)
 
 
 if __name__ == "__main__":

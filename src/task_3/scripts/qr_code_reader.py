@@ -33,11 +33,8 @@ class QRCodeReader:
 
         if len(decodedObjects) == 1:
             dObject = decodedObjects[0]
-            print("Found 1 QR code in the image!")
-            print("Data: ", str(dObject.data), "\n")
-            return QRCodeReaderServiceResponse(str(dObject.data), 0)
+            return QRCodeReaderServiceResponse(str(dObject.data.decode("utf-8")), 0)
         else:
-            print("No QR code found!")
             return QRCodeReaderServiceResponse("", 1)
 
 
