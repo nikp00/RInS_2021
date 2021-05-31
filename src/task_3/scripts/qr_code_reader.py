@@ -8,7 +8,6 @@ import pyzbar.pyzbar as pyzbar
 
 from task_3.srv import QRCodeReaderService, QRCodeReaderServiceResponse
 from sensor_msgs.msg import Image
-from std_msgs.msg import ColorRGBA
 
 
 class QRCodeReader:
@@ -27,37 +26,19 @@ class QRCodeReader:
             print(e)
 
         mask = cv2.inRange(image, (0, 0, 0), (200, 200, 200))
-        thresholded = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-        inverted = 255 - thresholded  # black-in-white
+        threshold = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+        inverted = 255 - threshold  # black-in-white
 
         decodedObjects = pyzbar.decode(inverted)
 
         if len(decodedObjects) == 1:
             dObject = decodedObjects[0]
             print("Found 1 QR code in the image!")
-            print("Data: ", dObject.data, "\n")
-
-            # # Visualize the detected QR code in the image
-            # points = dObject.polygon
-            # if len(points) > 4:
-            #     hull = cv2.convexHull(np.array([point for point in points], dtype=np.float32))
-            #     hull = list(map(tuple, np.squeeze(hull)))
-            # else:
-            #     hull = points
-
-            # ## Number of points in the convex hull
-            # n = len(hull)
-
-            # ## Draw the convext hull
-            # for j in range(0, n):
-            #     cv2.line(inverted, hull[j], hull[(j + 1) % n], (0, 255, 0), 2)
-
-            # cv2.imshow("Warped image", inverted)
-            # cv2.waitKey(1)
+            print("Data: ", str(dObject.data), "\n")
+            return QRCodeReaderServiceResponse(str(dObject.data), 0)
         else:
-            print("No qr code detected")
-
-        return QRCodeReaderServiceResponse("", 0)
+            print("No QR code found!")
+            return QRCodeReaderServiceResponse("", 1)
 
 
 if __name__ == "__main__":

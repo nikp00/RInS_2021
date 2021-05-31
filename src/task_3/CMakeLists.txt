@@ -87,6 +87,8 @@ add_service_files(
   ColorClassifierService.srv
   GetNormalService.srv
   DialogService.srv
+  QRCodeReaderService.srv
+  ExtractDigitsService.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -223,8 +225,9 @@ catkin_install_python(PROGRAMS
   scripts/move_arm.py
   scripts/color_classifier.py
   scripts/face_detector.py
-  scripts/qr_code.py
+  scripts/qr_code_reader.py
   scripts/extract_speech.py
+  scripts/digit_extractor.py
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

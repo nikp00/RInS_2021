@@ -3,6 +3,10 @@
         <param name="segmentation_size" type="int" value="1" />
         <param name="min_quad_size" type="int" value="15" />
     </node>
+    <node name="digit_extractor" pkg="task_3" type="digit_extractor.py" output="screen" />
+    <node name="qr_code_reader" pkg="task_3" type="qr_code_reader.py" output="screen" />
+    <node name="move_arm" pkg="task_3" type="move_arm.py" output="log" />
+    <node name="tts" pkg="task_3" type="tts.py" output="log" args="$(find task_3)/data/ $(find task_3)/data/ris-2021-e782e57981e3.json"></node>
     <node name="mover" pkg="task_3" type="mover.py" output="screen" />
 
 
@@ -10,13 +14,10 @@
     <node name="normal_finder" pkg="task_3" type="normal_finder" output="log" />
 
 
-    <node name="color_classifier" pkg="task_3" type="color_classifier.py" output="log" args="$(find task_3)/data/" />
+    <!-- <node name="color_classifier" pkg="task_3" type="color_classifier.py" output="log" args="$(find task_3)/data/" />
     <node name="ring_segmentation" pkg="task_3" type="ring_segmentation.py" output="screen" />
     <node name="cylinder_segmentation" pkg="task_3" type="cylinder_segmentation" output="log" />
-    <node name="cylinder_handler" pkg="task_3" type="cylinder_handler.py" output="log" />
+    <node name="cylinder_handler" pkg="task_3" type="cylinder_handler.py" output="log" /> -->
 
-    <node name="move_arm" pkg="task_3" type="move_arm.py" output="log" />
-    <node name="tts" pkg="task_3" type="tts.py" output="log" args="$(find task_3)/data/ $(find task_3)/data/ris-2021-e782e57981e3.json"></node>
 
-    <node name="qr_code_reader" pkg="task_3" type="qr_code_reader.py" output="screen" />
 </launch>

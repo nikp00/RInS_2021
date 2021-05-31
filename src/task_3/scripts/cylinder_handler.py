@@ -5,7 +5,7 @@ import tf2_ros
 import tf
 import numpy as np
 from collections import defaultdict
-
+import math
 
 from visualization_msgs.msg import MarkerArray, Marker
 
@@ -122,6 +122,9 @@ class CylinderHandler:
                 y - pose.position.y,
                 x - pose.position.x,
             )
+
+            if angle < 0:
+                angle += 2 * math.pi
 
             pose.orientation = Quaternion(
                 *list(tf.transformations.quaternion_from_euler(0, 0, angle))
@@ -376,7 +379,7 @@ class Cylinder:
         self.navigation_pose.orientation = self.euler_to_quaternion(angle)
 
     def quaternion_to_euler(self, pose):
-        return tf.transformations.euler_from_quaternion(
+        angle = tf.transformations.euler_from_quaternion(
             [
                 pose.orientation.x,
                 pose.orientation.y,
@@ -384,11 +387,14 @@ class Cylinder:
                 pose.orientation.w,
             ]
         )[2]
+        if angle < 0:
+            angle += 2 * math.pi
+        return angle
 
     def euler_to_quaternion(self, angle):
         return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
 
-    def remove_outlier(self, array, max_deviation=2):
+    def remove_outlier(self, array, max_deviation=0.5):
         mean = np.mean(array)
         std = np.std(array)
         distance_from_mean = abs(array - mean)

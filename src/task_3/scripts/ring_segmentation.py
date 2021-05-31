@@ -9,6 +9,7 @@ import tf2_ros
 import tf
 from collections import defaultdict
 import copy
+import math
 
 from tf2_geometry_msgs import do_transform_point
 from sensor_msgs.msg import Image
@@ -199,13 +200,14 @@ class RingSegmentation:
         angle_to_target = np.arctan2(elipse_x, k_f)
 
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
-
+        if not stamp:
+            stamp = rospy.Time.now()
         point_s = PointStamped()
         point_s.point.x = -y
         point_s.point.y = 0
         point_s.point.z = x
         point_s.header.frame_id = "camera_rgb_optical_frame"
-        point_s.header.stamp = rospy.Time(0)
+        point_s.header.stamp = stamp
 
         tf_ready = False
 
@@ -269,6 +271,9 @@ class RingSegmentation:
                 y - pose.position.y,
                 x - pose.position.x,
             )
+
+            if angle < 0:
+                angle += 2 * math.pi
 
             pose.orientation = Quaternion(
                 *list(tf.transformations.quaternion_from_euler(0, 0, angle))
@@ -459,7 +464,7 @@ class Ring:
         self.navigation_pose.orientation = self.euler_to_quaternion(angle)
 
     def quaternion_to_euler(self, pose):
-        return tf.transformations.euler_from_quaternion(
+        angle = tf.transformations.euler_from_quaternion(
             [
                 pose.orientation.x,
                 pose.orientation.y,
@@ -467,11 +472,14 @@ class Ring:
                 pose.orientation.w,
             ]
         )[2]
+        if angle < 0:
+            angle += 2 * math.pi
+        return angle
 
     def euler_to_quaternion(self, angle):
         return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
 
-    def remove_outlier(self, array, max_deviation=2):
+    def remove_outlier(self, array, max_deviation=0.5):
         mean = np.mean(array)
         std = np.std(array)
         distance_from_mean = abs(array - mean)

@@ -46,6 +46,8 @@ class FaceDetectorDNN:
         self.face_net = cv2.dnn.readNetFromCaffe(*facenet_args)
         self.mask_detector = load_model(*mask_detector_args)
 
+        self.MIN_DETECTIONS = 1
+
         self.dims = (0, 0, 0)
         self.seq = 0
         self.faces = list()
@@ -94,9 +96,9 @@ class FaceDetectorDNN:
         if not stamp:
             stamp = rospy.Time.now()
         point_s = PointStamped()
-        point_s.point.x = -y + (nx * 1)
+        point_s.point.x = -y + (nx * 0.4)
         point_s.point.y = 0
-        point_s.point.z = x + (nz * 1)
+        point_s.point.z = x + (nz * 0.4)
         point_s.header.frame_id = "camera_rgb_optical_frame"
         point_s.header.stamp = stamp
 
@@ -128,18 +130,19 @@ class FaceDetectorDNN:
         face_pose = self.camera_to_world_point(x, y, stamp=stamp)
         navigation_pose = self.camera_to_world_point(x, y, nx=res.nx, nz=res.nz, stamp=stamp)
 
-        angle = np.abs(
-            np.arctan2(
-                face_pose.position.y - navigation_pose.position.y,
-                face_pose.position.x - navigation_pose.position.x,
-            )
+        angle = np.arctan2(
+            face_pose.position.y - navigation_pose.position.y,
+            face_pose.position.x - navigation_pose.position.x,
         )
 
+        # print("Before if", angle, end=" ")
+        if angle < 0:
+            angle += 2 * math.pi
+        # print(angle)
         navigation_pose.orientation = Quaternion(
             *list(tf.transformations.quaternion_from_euler(0, 0, angle))
         )
 
-        print("Normal:", res.nx, res.nz, "angle", angle)
         return face_pose, navigation_pose
 
     def get_current_pose(self, time) -> Pose:
@@ -239,7 +242,7 @@ class FaceDetectorDNN:
                         if np.sqrt(
                             np.power(face_pose.position.x - e.obj_pose.position.x, 2)
                             + np.power(face_pose.position.y - e.obj_pose.position.y, 2)
-                        ) < 0.5 and (
+                        ) < 0.8 and (
                             (enc_available and face_recognition.compare_faces([e.enc], enc)[0])
                             or (mask > without_mask) == e.mask
                         ):
@@ -257,10 +260,10 @@ class FaceDetectorDNN:
 
         self.face_marker_publisher.publish(
             [e.to_marker() for e in self.faces]
-            + [e.to_navigation_marker() for e in self.faces if e.n_detections > 1]
+            + [e.to_navigation_marker() for e in self.faces if e.n_detections > self.MIN_DETECTIONS]
         )
         self.n_detections_marker_publisher.publish(
-            [e.to_text() for e in self.faces if e.n_detections > 1]
+            [e.to_text() for e in self.faces if e.n_detections > self.MIN_DETECTIONS]
         )
 
         self.face_pose_publisher.publish(
@@ -268,7 +271,7 @@ class FaceDetectorDNN:
                 [
                     FaceData(e.navigation_pose, e.obj_pose, e.mask, e.id)
                     for e in self.faces
-                    if e.n_detections > 1
+                    if e.n_detections > self.MIN_DETECTIONS
                 ]
             )
         )
@@ -372,12 +375,15 @@ class Face:
         self.navigation_pose.position.x = np.mean(self.remove_outlier(self.nx))
         self.navigation_pose.position.y = np.mean(self.remove_outlier(self.ny))
 
+        # print(len(self.remove_outlier(self.ny, max_deviation=0.5)), len(self.ny))
+        # print("Last", self.na[-1])
+
     def calculate_rotations(self):
         angle = np.mean(self.remove_outlier(self.na))
         self.navigation_pose.orientation = self.euler_to_quaternion(angle)
 
     def quaternion_to_euler(self, pose):
-        return tf.transformations.euler_from_quaternion(
+        angle = tf.transformations.euler_from_quaternion(
             [
                 pose.orientation.x,
                 pose.orientation.y,
@@ -385,11 +391,14 @@ class Face:
                 pose.orientation.w,
             ]
         )[2]
+        if angle < 0:
+            angle += 2 * math.pi
+        return angle
 
     def euler_to_quaternion(self, angle):
         return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, angle)))
 
-    def remove_outlier(self, array, max_deviation=2):
+    def remove_outlier(self, array, max_deviation=1):
         mean = np.mean(array)
         std = np.std(array)
         distance_from_mean = abs(array - mean)

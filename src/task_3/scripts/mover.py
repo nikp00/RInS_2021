@@ -22,7 +22,7 @@ from actionlib_msgs.msg import GoalID
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from task_3.msg import PoseAndColorArray, FaceDataArray
-from task_3.srv import TextToSpeechService, QRCodeReaderService
+from task_3.srv import TextToSpeechService, QRCodeReaderService, ExtractDigitsService
 from kobuki_msgs.msg import BumperEvent
 
 
@@ -110,6 +110,8 @@ class Mover:
         self.speak = rospy.ServiceProxy("text_to_speech", TextToSpeechService)
         rospy.wait_for_service("qr_code_reader")
         self.read_qr_code = rospy.ServiceProxy("qr_code_reader", QRCodeReaderService)
+        rospy.wait_for_service("digit_extractor")
+        self.extract_digits = rospy.ServiceProxy("digit_extractor", ExtractDigitsService)
 
         # Subscribers
         self.result_sub = rospy.Subscriber(
@@ -197,6 +199,10 @@ class Mover:
                 face = self.faces.get_last()
                 self.move_to_face(face)
                 self.state = "moving_to_face"
+            elif self.state == "read_digits":
+                print("Read digits")
+                self.read_digits()
+
             elif self.state == "return_to_stored_pose":
                 self.pose_pub.publish(self.stored_pose)
                 self.stored_pose = None
@@ -313,6 +319,18 @@ class Mover:
 
     def find_qr_code(self):
         print()
+
+    def read_digits(self):
+        res = self.extract_digits(0)
+        if res.status == 0:
+            print("Detected digits:", res.data)
+            self.state = "return_to_stored_pose"
+        else:
+            print("No digits found, fixing orientation")
+            msg = Twist()
+            msg.angular.z = 0.1
+            self.twist_pub.publish(msg)
+            rospy.sleep(1)
 
     def approach_cylinder(self, cylinder):
         color = cylinder.color
@@ -765,8 +783,9 @@ class Mover:
 
         elif self.state == "moving_to_cylinder":
             if res_state in (3, 4):
-                rospy.sleep(5)
+                rospy.sleep(2)
                 self.read_qr_code(0)
+                rospy.sleep(3)
             self.state = "return_to_stored_pose"
 
         elif self.state == "moving_to_ring":
@@ -776,8 +795,7 @@ class Mover:
 
         elif self.state == "moving_to_face":
             if res_state in (3, 4):
-                rospy.sleep(5)
-                self.state = "return_to_stored_pose"
+                self.state = "read_digits"
 
         elif self.state == "return_home":
             if res_state == 3:
