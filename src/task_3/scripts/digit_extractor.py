@@ -80,7 +80,7 @@ class DigitExtractor:
                 center_point = np.mean(marker_centers, axis=0)
 
         if len(center_point) == 0:
-            return ExtractDigitsServiceResponse(0, 1)
+            return None
 
         missing_markers = list()
         for i, e in enumerate(marker_centers):
