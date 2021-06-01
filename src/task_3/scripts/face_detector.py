@@ -1,6 +1,7 @@
 import sys
 
 from numpy.core.fromnumeric import shape
+from numpy.lib.function_base import angle
 from tensorflow.python import tf2
 import rospy
 import cv2
@@ -205,13 +206,26 @@ class FaceDetectorDNN:
 
         return mask, without_mask
 
+    def quaternion_to_euler(self, pose):
+        angle = tf.transformations.euler_from_quaternion(
+            [
+                pose.orientation.x,
+                pose.orientation.y,
+                pose.orientation.z,
+                pose.orientation.w,
+            ]
+        )[2]
+        if angle < 0:
+            angle += 2 * math.pi
+        return angle
+
     def process_faces(self, faces):
         self.dims = self.rgb_image.shape
         h = self.dims[0]
         w = self.dims[1]
         for i in range(0, faces.shape[2]):
             confidence = faces[0, 0, i, 2]
-            if confidence > 0.5:
+            if confidence > 0.8:
                 box = faces[0, 0, i, 3:7] * np.array([w, h, w, h])
                 box = box.astype("int")
                 x1, y1, x2, y2 = box[0], box[1], box[2], box[3]
@@ -221,8 +235,8 @@ class FaceDetectorDNN:
                 mask, without_mask = self.detect_mask(x1, y1, x2, y2)
 
                 cv2.rectangle(self.img_gamma2, (x1, y1), (x2, y2), (255, 0, 0))
-                cv2.imshow("img", self.img_gamma2)
-                cv2.waitKey(1)
+                # cv2.imshow("img", self.img_gamma2)
+                # cv2.waitKey(1)
 
                 face_distance = float(np.nanmean(self.depth_image[y1:y2, x1:x2]))
                 depth_time = self.depth_image_message.header.stamp
@@ -239,12 +253,16 @@ class FaceDetectorDNN:
                         enc = np.zeros(shape=(128,))
                     skip = False
                     for e in self.faces:
+                        e_angle = self.quaternion_to_euler(e.navigation_pose)
+                        c_angle = self.quaternion_to_euler(navigation_pose)
+                        angle_diff = abs(e_angle - c_angle)
                         if np.sqrt(
                             np.power(face_pose.position.x - e.obj_pose.position.x, 2)
                             + np.power(face_pose.position.y - e.obj_pose.position.y, 2)
-                        ) < 0.8 and (
+                        ) < 0.5 and (
                             (enc_available and face_recognition.compare_faces([e.enc], enc)[0])
                             or (mask > without_mask) == e.mask
+                            or angle_diff < math.pi / 4
                         ):
                             e.add_pose(face_pose, navigation_pose)
                             e.color = ColorRGBA(0, 1, 1, 1)

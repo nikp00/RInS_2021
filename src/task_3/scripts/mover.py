@@ -78,7 +78,7 @@ class Mover:
         self.image = None
 
         # Face approach data
-        self.update_position = 0
+        self.updated_pose = False
 
         # States
         self.states = [
@@ -163,6 +163,14 @@ class Mover:
                 "return_home",
                 "end",
             ):
+                self.check_safety_distance()
+
+            if self.state in (
+                "get_next_waypoint",
+                "moving_to_waypoint",
+                "return_home",
+                "end",
+            ):
                 if self.faces.is_new_data():
                     self.state = "move_to_face"
                 elif self.rings.is_new_data():
@@ -171,6 +179,7 @@ class Mover:
                     self.state = "move_to_cylinder"
 
             if self.state == "get_next_waypoint":
+
                 if len(self.waypoints.poses) > 0:
                     next_waypoint = self.find_nearest_waypoint()
                     self.visited_waypoints.append(next_waypoint)
@@ -217,6 +226,11 @@ class Mover:
             elif self.state == "read_digits":
                 print("Read digits")
                 self.read_digits()
+
+            elif self.state == "warning_safety_distance":
+                print("WARNING")
+                self.speak("Please respect the safety distance!")
+                self.state = "return_to_stored_pose"
 
             elif self.state == "return_to_stored_pose":
                 self.pose_pub.publish(self.stored_pose)
@@ -734,26 +748,170 @@ class Mover:
         self.pose_pub.publish(msg)
 
     def get_face_info(self):
-        res = self.dialog(0)
-        msg = Twist()
-        msg.linear.x = -0.5
-        self.twist_pub.publish(msg)
-        rospy.sleep(1)
-        self.move_to_face(self.faces.current)
-        rospy.sleep(2)
+        # res = self.dialog(0)
+        print("Dialog OK")
         self.state = "read_digits"
 
     def read_digits(self):
+        print("Read digits")
         res = self.extract_digits(0)
         if res.status == 0:
             print("Detected digits:", res.data)
             self.state = "return_to_stored_pose"
+            self.updated_pose = False
         else:
-            print("No digits found, fixing orientation")
+            if self.updated_pose == False:
+                self.updated_pose = True
+                print("No digits found, fixing position")
+                msg = Twist()
+                msg.linear.x = -0.3
+                self.twist_pub.publish(msg)
+                rospy.sleep(2)
+                self.move_to_face(self.faces.current)
+                rospy.sleep(5)
+                self.fix_heading(self.faces.current.navigation_pose)
+            else:
+                print("No digits found, fixing orientation")
+                msg = Twist()
+                msg.angular.z = 0.05
+                msg.linear.x = 0.01
+                self.twist_pub.publish(msg)
+                rospy.sleep(1)
+
+    def fix_heading(self, target):
+        target_angle = self.to_euler(target.orientation)
+        while True:
+            current_pose = self.get_current_pose()
+            angle = self.to_euler(current_pose.pose.orientation)
+            angle_diff = abs(angle - target_angle) % (2 * math.pi)
             msg = Twist()
-            msg.angular.z = 0.1
-            self.twist_pub.publish(msg)
-            rospy.sleep(1)
+            print("Diff: ", angle_diff, "Angle: ", angle, "Target_angle: ", target_angle)
+            if angle_diff > (math.pi / 180) * 2:
+                if target_angle > angle:
+                    if (target_angle - angle) > (math.pi * 2 - abs(angle - target_angle)):
+                        msg.angular.z = -0.05
+                    else:
+                        msg.angular.z = 0.05
+                else:
+                    if angle - target_angle > (math.pi * 2 - abs(target_angle - angle)):
+                        msg.angular.z = 0.05
+                    else:
+                        msg.angular.z = -0.05
+                self.twist_pub.publish(msg)
+                rospy.sleep(1)
+            else:
+                return
+
+    def fix_heading_cylinder(self):
+        color = self.cylinders.current.color
+
+        while True:
+            try:
+                image = self.bridge.imgmsg_to_cv2(
+                    rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
+                )
+            except CvBridgeError as e:
+                print(e)
+
+            limits = {
+                "red": (np.array([0, 10, 65]), np.array([20, 255, 255])),
+                "yellow": (np.array([20, 10, 65]), np.array([40, 255, 255])),
+                "green": (np.array([40, 10, 65]), np.array([70, 255, 255])),
+                "blue": (np.array([70, 10, 65]), np.array([110, 255, 255])),
+            }
+
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            mask = cv2.inRange(
+                hsv,
+                *limits.get(color, (np.array([0, 0, 0]), np.array([110, 255, 255]))),
+            )
+            countour, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            if len(countour) > 0:
+                depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
+                depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
+
+                cont = max(countour, key=cv2.contourArea)
+                y = int(image.shape[0] / 2)
+                x = int(image.shape[1] / 2)
+                m = cv2.moments(cont)
+                cx = int(m["m10"] / m["m00"])
+                cy = int(m["m01"] / m["m00"])
+
+                cv2.circle(image, (cx, cy), 3, (0, 255, 0))
+                cv2.drawContours(image, [cont], -1, (0, 255, 0), 2)
+
+                msg = Twist()
+
+                step = 0.15
+                if abs(cx - x) < 5:
+                    step = 0.005
+                elif abs(cx - x) < 20:
+                    step = 0.01
+                elif abs(cx - x) < 30:
+                    step = 0.03
+                elif abs(cx - x) < 50:
+                    step = 0.1
+
+                if abs(cx - x) > 2:
+                    if cx > x:
+                        print(f"Turn right (speed: {step})")
+                        msg.angular.z = -step
+                    elif cy < x:
+                        print(f"Turn left (speed: {step})")
+                        msg.angular.z = step
+                    self.twist_pub.publish(msg)
+                    self.fine_navigation_img_pub.publish(
+                        self.bridge.cv2_to_imgmsg(
+                            cv2.bitwise_and(image, image, mask=cv2.bitwise_not(mask))
+                        )
+                    )
+                else:
+                    return
+
+    def check_safety_distance(self):
+        for e in self.faces.data.values():
+            e_angle = self.to_euler(e.navigation_pose.orientation)
+            for f in self.faces.data.values():
+                if f == e:
+                    continue
+                f_angle = self.to_euler(f.navigation_pose.orientation)
+                if (e.warned and f.warned) or abs(f_angle - e_angle) > math.pi / 4:
+                    continue
+                dist = np.sqrt(
+                    np.power(e.obj_pose.position.x - f.obj_pose.position.x, 2)
+                    + np.power(e.obj_pose.position.y - f.obj_pose.position.y, 2)
+                )
+
+                if dist < 1:
+                    msg = PoseStamped()
+                    msg.pose.position.x = (
+                        e.navigation_pose.position.x + f.navigation_pose.position.x
+                    ) / 2
+                    msg.pose.position.y = (
+                        e.navigation_pose.position.y + f.navigation_pose.position.y
+                    ) / 2
+                    msg.pose.orientation = Quaternion(
+                        *list(
+                            tf.transformations.quaternion_from_euler(0, 0, (f_angle + e_angle) / 2)
+                        )
+                    )
+
+                    e.warned = True
+                    f.warned = True
+
+                    print("MOVE TO WARNING")
+
+                    self.interupt_plan()
+                    self.state = "moving_to_warning_safety_distance"
+                    msg.header.seq = 200 + e.id
+                    msg.header.stamp = rospy.Time.now()
+                    msg.header.frame_id = "map"
+
+                    self.waypoint_markers.markers.append(
+                        self.create_marker(self.seq + 200, msg.pose, r=1)
+                    )
+                    self.pose_pub.publish(msg)
 
     def fade_markers(self):
         for e in self.waypoint_markers.markers:
@@ -798,7 +956,7 @@ class Mover:
         return msg
 
     def to_euler(self, quat):
-        return tf.transformations.euler_from_quaternion(
+        angle = tf.transformations.euler_from_quaternion(
             [
                 quat.x,
                 quat.y,
@@ -806,6 +964,11 @@ class Mover:
                 quat.w,
             ]
         )[2]
+
+        if angle < 0:
+            angle += 2 * math.pi
+
+        return angle
 
     def result_sub_callback(self, data):
         res_state = data.status.status
@@ -817,16 +980,33 @@ class Mover:
                 self.fade_markers()
 
         elif self.state == "moving_to_cylinder":
-            if res_state in (3, 4):
+            if res_state == 3:
+                self.fix_heading_cylinder()
                 self.state = "read_qr_code"
+            elif res_state == 4:
+                self.cylinders.reset_current()
+                self.state = "return_to_stored_pose"
+
         elif self.state == "moving_to_ring":
-            if res_state in (3, 4):
+            if res_state == 3:
+                self.fix_heading(self.rings.current.navigation_pose)
                 rospy.sleep(5)
+                self.state = "return_to_stored_pose"
+            elif res_state == 4:
+                self.rings.reset_current()
                 self.state = "return_to_stored_pose"
 
         elif self.state == "moving_to_face":
-            if res_state in (3, 4):
+            if res_state == 3:
+                self.fix_heading(self.faces.current.navigation_pose)
                 self.state = "initial_dialog"
+            elif res_state == 4:
+                self.faces.reset_current()
+                self.state = "return_to_stored_pose"
+
+        if self.state == "moving_to_warning_safety_distance":
+            if res_state in (3, 4):
+                self.state = "warning_safety_distance"
 
         elif self.state == "return_home":
             if res_state == 3:
@@ -855,8 +1035,6 @@ class ObjectContainer:
         self.data = dict()
         self.new_entry = list()
         self.last_id = -1
-        self.cancel_counter = 0
-        self.ids = set()
         self.current = None
 
     def is_new_data(self):
@@ -878,6 +1056,10 @@ class ObjectContainer:
 
     def update(self, obj):
         self.data[obj.id].update(obj)
+
+    def reset_current(self):
+        self.last_id = -1
+        self.new_entry.insert(0, self.current.id)
 
 
 class Cylinder:
@@ -918,6 +1100,7 @@ class Face:
         self.obj_pose = obj_pose
         self.navigation_pose = navigation_pose
         self.mask = mask
+        self.warned = False
 
     def update(self, obj):
         self.obj_pose = obj.obj_pose
