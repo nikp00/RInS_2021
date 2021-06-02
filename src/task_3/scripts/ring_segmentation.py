@@ -36,6 +36,8 @@ class RingSegmentation:
     def __init__(self):
         self.node = rospy.init_node("ring_segmentation", anonymous=True)
 
+        self.MIN_DETECTIONS = rospy.get_param("~min_detections", default=1)
+
         self.bridge = CvBridge()
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
@@ -324,6 +326,7 @@ class RingSegmentation:
                 (res.marker_color.r, res.marker_color.g, res.marker_color.b),
                 res.color,
                 self.seq,
+                self.MIN_DETECTIONS,
             )
             self.seq += 1
             self.rings.append(ring)
@@ -338,6 +341,7 @@ class RingSegmentation:
                 [
                     PoseAndColor(e.obj_pose, e.navigation_pose, e.get_color_name(), e.id)
                     for e in self.rings
+                    if e.n_detections > self.MIN_DETECTIONS
                 ]
             )
         )
@@ -358,7 +362,13 @@ class RingSegmentation:
 
 class Ring:
     def __init__(
-        self, obj_pose: Pose, navigation_pose: Pose, color: tuple, color_name: str, id: int
+        self,
+        obj_pose: Pose,
+        navigation_pose: Pose,
+        color: tuple,
+        color_name: str,
+        id: int,
+        min_detections,
     ):
         self.obj_pose = obj_pose
         self.navigation_pose = navigation_pose
@@ -373,6 +383,7 @@ class Ring:
         self.n_detections = 1
         self.color_name = defaultdict(int)
         self.color_name[color_name] += 1
+        self.min_detections = min_detections
 
     def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
         navigation_pose.position.z = 0
@@ -399,7 +410,7 @@ class Ring:
         m.scale.z = 0.3
         color = max(self.color, key=self.color.get)
         color = map(lambda x: x / 255, color)
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             m.color = ColorRGBA(*color, 1)
         else:
             m.color = ColorRGBA(*color, 0.3)
@@ -418,7 +429,7 @@ class Ring:
         marker.pose = self.navigation_pose
         color = max(self.color, key=self.color.get)
         color = map(lambda x: x / 255, color)
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             marker.color = ColorRGBA(*color, 1)
         else:
             marker.color = ColorRGBA(*color, 0.3)
@@ -441,7 +452,7 @@ class Ring:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             m.color = ColorRGBA(0, 0, 0, 1)
         else:
             m.color = ColorRGBA(255, 0, 0, 1)

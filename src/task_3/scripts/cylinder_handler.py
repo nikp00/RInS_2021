@@ -1,3 +1,4 @@
+from numpy.core.numeric import True_
 import rospy
 import copy
 import tf2_geometry_msgs
@@ -38,6 +39,8 @@ class CylinderHandler:
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
+        self.MIN_DETECTIONS = rospy.get_param("~min_detections", default=2)
+
         self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
         self.map_transform = TransformStamped()
         self.map_transform.transform.translation.x = self.map_msg.info.origin.position.x
@@ -76,6 +79,33 @@ class CylinderHandler:
             axis=0,
         )
 
+    def fix_distance_from_wall(self, grid_x, grid_y):
+        min_distance = 6
+
+        if self.map[int(grid_y), int(grid_x)][0] == 0:
+            done = False
+            grid_x = int(grid_x)
+            grid_y = int(grid_y)
+            while not done:
+                done = True
+                left = self.check_direction(grid_x, grid_y, dx=-1, target=100)
+                top = self.check_direction(grid_x, grid_y, dy=1, target=100)
+                right = self.check_direction(grid_x, grid_y, dx=1, target=100)
+                bottom = self.check_direction(grid_x, grid_y, dy=-1, target=100)
+                if left[2] < min_distance:
+                    grid_x += 1
+                    done = False
+                if right[2] < min_distance:
+                    grid_x -= 1
+                    done = False
+                if bottom[2] < min_distance:
+                    grid_y += 1
+                    done = False
+                if top[2] < min_distance:
+                    grid_y -= 1
+                    done = False
+        return grid_x, grid_y
+
     def calculate_navigation_pose(self, x, y):
         if np.isnan(x) or np.isnan(y):
             return None
@@ -106,6 +136,11 @@ class CylinderHandler:
 
             grid_x = grid_x + dx * 0.05 * 200
             grid_y = grid_y + dy * 0.05 * 200
+
+            print("Before", grid_x, grid_y)
+
+            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y)
+            print("After", grid_x, grid_y)
 
             grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
             grid_x = grid_x * self.map_msg.info.resolution
@@ -210,16 +245,6 @@ class CylinderHandler:
         if navigation_pose == None:
             return
 
-        # dx, dy = self.calculate_direction_vector(
-        #     base_pose.position.x, base_pose.position.y, point.point.x, point.point.y
-        # )
-        # navigation_pose = Pose()
-        # navigation_pose.position.x = point.point.x + dx * 0.4
-        # navigation_pose.position.y = point.point.y + dy * 0.4
-        # navigation_pose.orientation = Quaternion(
-        #     *list(tf.transformations.quaternion_from_euler(0, 0, angle))
-        # )
-
         if np.isnan(pose.position.x) or res.color == "black":
             return
 
@@ -248,6 +273,7 @@ class CylinderHandler:
                 (res.marker_color.r, res.marker_color.g, res.marker_color.b),
                 res.color,
                 self.seq,
+                self.MIN_DETECTIONS,
             )
             self.seq += 1
             self.cylinders.append(cylinder)
@@ -263,6 +289,7 @@ class CylinderHandler:
                 [
                     PoseAndColor(e.obj_pose, e.navigation_pose, e.get_color_name(), e.id)
                     for e in self.cylinders
+                    if e.n_detections > self.MIN_DETECTIONS
                 ]
             )
         )
@@ -270,7 +297,13 @@ class CylinderHandler:
 
 class Cylinder:
     def __init__(
-        self, obj_pose: Pose, navigation_pose: Pose, color: tuple, color_name: str, id: int
+        self,
+        obj_pose: Pose,
+        navigation_pose: Pose,
+        color: tuple,
+        color_name: str,
+        id: int,
+        min_detections,
     ):
         self.obj_pose = obj_pose
         self.navigation_pose = navigation_pose
@@ -285,6 +318,7 @@ class Cylinder:
         self.n_detections = 1
         self.color_name = defaultdict(int)
         self.color_name[color_name] += 1
+        self.min_detections = min_detections
 
     def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
         navigation_pose.position.z = 0
@@ -313,7 +347,7 @@ class Cylinder:
         color = max(self.color, key=self.color.get)
         color = map(lambda x: x / 255, color)
 
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             m.color = ColorRGBA(*color, 1)
         else:
             m.color = ColorRGBA(*color, 0.3)
@@ -332,7 +366,7 @@ class Cylinder:
         marker.pose = self.navigation_pose
         color = max(self.color, key=self.color.get)
         color = map(lambda x: x / 255, color)
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             marker.color = ColorRGBA(*color, 1)
         else:
             marker.color = ColorRGBA(*color, 0.3)
@@ -356,7 +390,7 @@ class Cylinder:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             m.color = ColorRGBA(0, 0, 0, 1)
         else:
             m.color = ColorRGBA(255, 0, 0, 1)

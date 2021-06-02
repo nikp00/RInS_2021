@@ -44,6 +44,8 @@ class FaceDetectorDNN:
         self.node = rospy.init_node("face_detector")
         self.bridge = CvBridge()
 
+        self.MIN_DETECTIONS = rospy.get_param("~min_detections", default=1)
+
         self.face_net = cv2.dnn.readNetFromCaffe(*facenet_args)
         self.mask_detector = load_model(*mask_detector_args)
 
@@ -97,9 +99,9 @@ class FaceDetectorDNN:
         if not stamp:
             stamp = rospy.Time.now()
         point_s = PointStamped()
-        point_s.point.x = -y + (nx * 0.4)
+        point_s.point.x = -y + (nx * 0.8)
         point_s.point.y = 0
-        point_s.point.z = x + (nz * 0.4)
+        point_s.point.z = x + (nz * 0.8)
         point_s.header.frame_id = "camera_rgb_optical_frame"
         point_s.header.stamp = stamp
 
@@ -273,7 +275,14 @@ class FaceDetectorDNN:
                     if not skip:
                         self.seq += 1
                         self.faces.append(
-                            Face(face_pose, navigation_pose, enc, self.seq, mask > without_mask)
+                            Face(
+                                face_pose,
+                                navigation_pose,
+                                enc,
+                                self.seq,
+                                mask > without_mask,
+                                self.MIN_DETECTIONS,
+                            )
                         )
 
         self.face_marker_publisher.publish(
@@ -307,7 +316,7 @@ class FaceDetectorDNN:
 
 
 class Face:
-    def __init__(self, obj_pose: Pose, navigation_pose: Pose, enc, id, mask=False):
+    def __init__(self, obj_pose: Pose, navigation_pose: Pose, enc, id, mask, min_detections):
         self.obj_pose = obj_pose
         self.navigation_pose = navigation_pose
         self.enc = copy.deepcopy(enc)
@@ -320,6 +329,7 @@ class Face:
         self.na = [self.quaternion_to_euler(navigation_pose)]
         self.n_detections = 1
         self.mask = mask
+        self.min_detections = min_detections
 
     def add_pose(self, obj_pose: Pose, navigation_pose: Pose):
         navigation_pose.position.z = 0
@@ -342,10 +352,10 @@ class Face:
         marker.pose = self.obj_pose
         marker.color = self.color
         marker.id = self.id
-        if self.n_detections < 1:
-            marker.scale.x = 0.5
-            marker.scale.y = 0.5
-            marker.scale.z = 0.5
+        if self.n_detections <= self.min_detections:
+            marker.scale.x = 0.05
+            marker.scale.y = 0.05
+            marker.scale.z = 0.05
         return marker
 
     def to_navigation_marker(self):
@@ -378,7 +388,7 @@ class Face:
         m.scale.x = 0.3
         m.scale.y = 0.3
         m.scale.z = 0.3
-        if self.n_detections > 1:
+        if self.n_detections > self.min_detections:
             m.color = ColorRGBA(0, 0, 0, 1)
         else:
             m.color = ColorRGBA(255, 0, 0, 1)

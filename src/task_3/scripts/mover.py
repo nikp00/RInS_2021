@@ -79,6 +79,7 @@ class Mover:
 
         # Face approach data
         self.updated_pose = False
+        self.turn_counter = 0
 
         # States
         self.states = [
@@ -163,7 +164,7 @@ class Mover:
                 "return_home",
                 "end",
             ):
-                self.check_safety_distance()
+                self.check_social_distance()
 
             if self.state in (
                 "get_next_waypoint",
@@ -212,9 +213,8 @@ class Mover:
                 ring = self.rings.get_last()
                 self.move_to_ring(ring)
                 self.state = "moving_to_ring"
-
             elif self.state == "approach_ring":
-                self.approach_ring(self.rings.current)
+                self.approach_ring()
 
             elif self.state == "move_to_face":
                 self.interupt_plan()
@@ -355,7 +355,7 @@ class Mover:
         else:
             print("No QR code found, fixing orientation")
             msg = Twist()
-            msg.linear.x = 0.01
+            msg.linear.x = 0.1
             self.twist_pub.publish(msg)
             rospy.sleep(1)
 
@@ -567,14 +567,14 @@ class Mover:
         self.pose_pub.publish(msg)
         self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
 
-    def approach_ring(self, ring):
+    def approach_ring(self):
+        ring = self.rings.current
+
         cv_image = self.bridge.imgmsg_to_cv2(
             rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
         )
-
         depth_image = rospy.wait_for_message("/camera/depth/image_raw", Image)
         depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
-
         left = np.nanmean(
             depth_image[
                 self.params["vertical_space"] : -self.params["vertical_space"],
@@ -593,13 +593,13 @@ class Mover:
         color = ring.color
 
         dist = math.sqrt(
-            pow((current_pose.pose.position.x - ring.pose.position.x), 2)
-            + pow((current_pose.pose.position.y - ring.pose.position.y), 2)
+            pow((current_pose.pose.position.x - ring.obj_pose.position.x), 2)
+            + pow((current_pose.pose.position.y - ring.obj_pose.position.y), 2)
         )
 
         angle = self.to_euler(current_pose.pose.orientation)
 
-        target_angle = self.fix_angle(ring.pose, current_pose)
+        target_angle = self.fix_angle(ring.obj_pose, current_pose)
         target_angle = self.to_euler(target_angle)
 
         msg = Twist()
@@ -620,6 +620,8 @@ class Mover:
                 else:
                     msg.linear.x = 0.04
                     self.goal_reached = True
+                if self.bumper_hit_counter > 1:
+                    self.ring_target_distance += 0.01
             elif ((np.isnan(left) or left < 0.45) and dist > 0.3) and (
                 not ((np.isnan(left) and np.isnan(right))) or abs(left - right) > 0.2
             ):
@@ -720,6 +722,7 @@ class Mover:
                 self.bumper_hit_counter = 0
                 self.ring_target_distance = self.ring_default_distance
                 self.state = "return_to_stored_pose"
+                self.arm_control_pub.publish("retract")
                 print("Return to stored pose")
 
         self.twist_pub.publish(msg)
@@ -770,33 +773,38 @@ class Mover:
                 self.move_to_face(self.faces.current)
                 rospy.sleep(5)
                 self.fix_heading(self.faces.current.navigation_pose)
+                self.turn_counter = 0
             else:
-                print("No digits found, fixing orientation")
-                msg = Twist()
-                msg.angular.z = 0.05
-                msg.linear.x = 0.01
-                self.twist_pub.publish(msg)
-                rospy.sleep(1)
+                if self.turn_counter < 7:
+                    self.turn_counter += 1
+                    print("No digits found, fixing orientation")
+                    msg = Twist()
+                    msg.angular.z = 0.05
+                    msg.linear.x = 0.05
+                    self.twist_pub.publish(msg)
+                    rospy.sleep(1)
+                else:
+                    self.updated_pose = False
 
     def fix_heading(self, target):
-        target_angle = self.to_euler(target.orientation)
         while True:
+            target_angle = self.to_euler(target.orientation)
             current_pose = self.get_current_pose()
             angle = self.to_euler(current_pose.pose.orientation)
             angle_diff = abs(angle - target_angle) % (2 * math.pi)
             msg = Twist()
             print("Diff: ", angle_diff, "Angle: ", angle, "Target_angle: ", target_angle)
-            if angle_diff > (math.pi / 180) * 2:
+            if angle_diff > (math.pi / 180) * 5:
                 if target_angle > angle:
-                    if (target_angle - angle) > (math.pi * 2 - abs(angle - target_angle)):
-                        msg.angular.z = -0.05
+                    if abs(target_angle - angle) > (math.pi * 2 - abs(angle - target_angle)):
+                        msg.angular.z = -0.1
                     else:
-                        msg.angular.z = 0.05
+                        msg.angular.z = 0.1
                 else:
-                    if angle - target_angle > (math.pi * 2 - abs(target_angle - angle)):
-                        msg.angular.z = 0.05
+                    if abs(target_angle - angle) > (math.pi * 2 - abs(angle - target_angle)):
+                        msg.angular.z = 0.1
                     else:
-                        msg.angular.z = -0.05
+                        msg.angular.z = -0.1
                 self.twist_pub.publish(msg)
                 rospy.sleep(1)
             else:
@@ -869,7 +877,7 @@ class Mover:
                 else:
                     return
 
-    def check_safety_distance(self):
+    def check_social_distance(self):
         for e in self.faces.data.values():
             e_angle = self.to_euler(e.navigation_pose.orientation)
             for f in self.faces.data.values():
@@ -990,8 +998,8 @@ class Mover:
         elif self.state == "moving_to_ring":
             if res_state == 3:
                 self.fix_heading(self.rings.current.navigation_pose)
-                rospy.sleep(5)
-                self.state = "return_to_stored_pose"
+                self.arm_control_pub.publish("grab_vaccine")
+                self.state = "approach_ring"
             elif res_state == 4:
                 self.rings.reset_current()
                 self.state = "return_to_stored_pose"
