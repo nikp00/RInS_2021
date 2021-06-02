@@ -99,11 +99,11 @@ class Mover:
         self.state = "get_next_waypoint"
 
         # Navigation
-        self.waypoints = rospy.wait_for_message("/waypoints", PoseArray)
-        self.waypoint_markers = MarkerArray()
+        self.waypoints = Waypoints()
         self.seq = 0
-        self.n_waypoints = len(self.waypoints.poses)
-        self.visited_waypoints = list()
+        self.waypoint_markers = MarkerArray()
+        self.vaccinated_faces = 0
+        self.get_waypoints()
 
         # TF Buffer
         self.tf_buf = tf2_ros.Buffer()
@@ -178,27 +178,29 @@ class Mover:
                     self.state = "move_to_ring"
                 elif self.cylinders.is_new_data():
                     self.state = "move_to_cylinder"
+            if self.vaccinated_faces == 4:
+                self.send_next_waypoint(self.starting_pose.pose)
+                self.state = "return_home"
 
-            if self.state == "get_next_waypoint":
+            elif self.state == "get_next_waypoint":
 
-                if len(self.waypoints.poses) > 0:
+                if len(self.waypoints.get_available()) > 0:
                     next_waypoint = self.find_nearest_waypoint()
-                    self.visited_waypoints.append(next_waypoint)
-                    self.waypoints.poses.remove(next_waypoint)
                     self.waypoint_markers.markers.append(
-                        self.create_marker(self.seq, next_waypoint)
+                        self.create_marker(self.seq, next_waypoint.pose)
                     )
-                    self.send_next_waypoint(next_waypoint)
+                    self.send_next_waypoint(next_waypoint.pose)
                     self.state = "moving_to_waypoint"
-                elif len(self.visited_waypoints) > 0:
-                    next_waypoint = self.visited_waypoints.pop()
+                elif len(self.waypoints.history) > 0:
+                    next_waypoint = self.waypoints.history.pop()
                     current_pose = self.get_current_pose()
-                    next_waypoint.orientation = self.fix_angle(next_waypoint, current_pose)
-                    self.send_next_waypoint(next_waypoint)
+                    next_waypoint.pose.orientation = self.fix_angle(
+                        next_waypoint.pose, current_pose
+                    )
+                    self.send_next_waypoint(next_waypoint.pose)
                     self.state = "moving_to_waypoint"
                 else:
-                    self.send_next_waypoint(self.starting_pose.pose)
-                    self.state = "return_home"
+                    self.waypoints.reset()
 
             elif self.state == "move_to_cylinder":
                 self.interupt_plan()
@@ -239,15 +241,15 @@ class Mover:
             elif self.state == "end":
                 break
 
+    def get_waypoints(self):
+        waypoints = rospy.wait_for_message("/waypoints", PoseArray)
+        for e in waypoints.poses:
+            self.waypoints.add(Waypoint(e))
+
     def interupt_plan(self):
         self.cancel_goal_pub.publish(GoalID())
         rospy.sleep(1)
         self.stored_pose = self.get_current_pose()
-        if len(self.visited_waypoints) > 0:
-            last_waypoint = self.visited_waypoints.pop()
-            self.waypoints.poses.append(last_waypoint)
-        if len(self.waypoint_markers.markers) > 0:
-            self.waypoint_markers.markers.pop()
         self.fade_markers()
 
     def get_current_pose(self) -> PoseStamped:
@@ -277,13 +279,13 @@ class Mover:
         min_len = 100000
 
         # Find the closest waypoint to teh current position
-        for e in self.waypoints.poses:
+        for e in self.waypoints.get_available():
             goal = PoseStamped()
             goal.header.seq = 0
             goal.header.stamp = rospy.Time.now()
             goal.header.frame_id = "map"
-            goal.pose.position = e.position
-            goal.pose.orientation = e.orientation
+            goal.pose.position = e.pose.position
+            goal.pose.orientation = e.pose.orientation
 
             req = GetPlan()
             req.start = start
@@ -317,8 +319,9 @@ class Mover:
                 waypoint = e
 
         if fix_angle:
-            waypoint.orientation = self.fix_angle(waypoint, start)
+            waypoint.pose.orientation = self.fix_angle(waypoint.pose, start)
 
+        self.waypoints.set_current(waypoint)
         return waypoint
 
     def fix_angle(self, pose: Pose, current_pose: PoseStamped) -> Quaternion:
@@ -985,8 +988,8 @@ class Mover:
         if self.state == "moving_to_waypoint":
             if res_state in (3, 4):
                 self.seq += 1
+                self.waypoints.current.visited = True
                 self.state = "get_next_waypoint"
-                print(self.state, 3)
                 self.fade_markers()
 
         elif self.state == "moving_to_cylinder":
@@ -1145,6 +1148,36 @@ class VaccinePredictor:
     def predict(self, age, hours_exercise):
         res = self.clf.predict([[56.56565656565657, 21.224489795918366]])
         return self.le.inverse_transform(res)
+
+
+class Waypoint:
+    def __init__(self, pose):
+        self.pose = pose
+        self.visited = False
+
+
+class Waypoints:
+    def __init__(self):
+        self.data = list()
+        self.current = None
+        self.visited = 0
+        self.history = list()
+
+    def get_available(self):
+        return [e for e in self.data if not e.visited]
+
+    def reset(self):
+        for e in self.data:
+            e.visited = False
+        self.visited = 0
+        self.history = list()
+
+    def add(self, pose):
+        self.data.append(pose)
+
+    def set_current(self, waypoint):
+        self.current = waypoint
+        self.history.append(waypoint)
 
 
 if __name__ == "__main__":

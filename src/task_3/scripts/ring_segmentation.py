@@ -225,11 +225,41 @@ class RingSegmentation:
         pose.position.y = point_world.point.y
         pose.position.z = point_world.point.z
 
+        x = pose.position.x
+        y = pose.position.y
+
+        grid_x = int((x - self.map_msg.info.origin.position.x) / self.map_msg.info.resolution)
+        grid_y = self.map_msg.info.height - int(
+            (y - self.map_msg.info.origin.position.y) / self.map_msg.info.resolution
+        )
+        cell = self.map[grid_y, grid_x]
+        target = 0 if cell[0] == 100 else 100
+        left = self.check_direction(grid_x, grid_y, dx=-1, target=target)
+        top = self.check_direction(grid_x, grid_y, dy=1, target=target)
+        right = self.check_direction(grid_x, grid_y, dx=1, target=target)
+        bottom = self.check_direction(grid_x, grid_y, dy=-1, target=target)
+        dists = [e for e in [left, top, right, bottom] if e[2] != 0]
+        min_pose = min(dists, key=lambda x: x[2])
+
+        grid_x = min_pose[0]
+        grid_y = min_pose[1]
+
+        grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y)
+
+        grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
+        grid_x = grid_x * self.map_msg.info.resolution
+        pt = PointStamped()
+        pt.point.x = grid_x
+        pt.point.y = grid_y
+        pt.point.z = 0
+        pt = do_transform_point(pt, self.map_transform)
+
+        pose = Pose()
+        pose.position = pt.point
+
         return pose
 
-    def fix_distance_from_wall(self, grid_x, grid_y):
-        min_distance = 6
-
+    def fix_distance_from_wall(self, grid_x, grid_y, min_distance=6):
         if self.map[int(grid_y), int(grid_x)][0] == 0:
             done = False
             grid_x = int(grid_x)
@@ -285,7 +315,7 @@ class RingSegmentation:
             grid_x = grid_x + dx * 0.05 * 200
             grid_y = grid_y + dy * 0.05 * 200
 
-            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y)
+            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y, 2)
 
             grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
             grid_x = grid_x * self.map_msg.info.resolution
