@@ -120,10 +120,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>5521 432000000</sim_time>
-      <real_time>1213 907960640</real_time>
-      <wall_time>1622638330 572571845</wall_time>
-      <iterations>1101906</iterations>
+      <sim_time>5590 474000000</sim_time>
+      <real_time>69 901602243</real_time>
+      <wall_time>1622638622 855971059</wall_time>
+      <iterations>69042</iterations>
       <model name='classroom'>
         <pose>-2 -2 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -171,7 +171,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>0.761453 0.453446 1.79961 0 0.417795 1.14184</pose>
+        <pose>0.918727 7.34154 10.6164 -0 0.957795 -1.79816</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -297,6 +297,11 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
     <light name='user_point_light_0_clone_1_clone_clone_clone_clone' type='point'>
       <pose>5.24516 4.18278 1 0 -0 0</pose>
@@ -310,6 +315,11 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
   </world>
 </sdf>
