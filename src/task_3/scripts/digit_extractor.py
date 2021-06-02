@@ -35,7 +35,6 @@ class DigitExtractor:
 
     def extract(self, req):
         try:
-            print("START")
             cv_image = self.bridge.imgmsg_to_cv2(
                 rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
             )
@@ -266,14 +265,14 @@ class DigitExtractor:
                 image_cv2 = vision.Image(content=content2)
                 response =  self.client.text_detection(image=image_cv2)
                 texts = response.text_annotations
-                number = texts[0].description
+                if(len(texts) > 0):
+                    number = texts[0].description
+                    number = re.findall('\\d+', number)
 
-                number = re.findall('\\d+', number)
-
-                if(len(number) >= 2):
-                    myNumber = number[0] + number[1]
-                    print("RESULT IS: ", myNumber)
-                    return ExtractDigitsServiceResponse(int(myNumber), 0)
+                    if(len(number) >= 2):
+                        myNumber = number[0] + number[1]
+                        print("RESULT IS: ", myNumber)
+                        return ExtractDigitsServiceResponse(int(myNumber), 0)
 
 
                 #################################################################################
@@ -323,7 +322,9 @@ class DigitExtractor:
             # return ExtractDigitsServiceResponse(0, 1)
 
             return ExtractDigitsServiceResponse(0, 1)
-        except:
+        except Exception as e:
+            print("ERRRO")
+            print(e)
             return ExtractDigitsServiceResponse(0, 1)
 
 if __name__ == "__main__":
