@@ -228,6 +228,9 @@ class RingSegmentation:
         x = pose.position.x
         y = pose.position.y
 
+        if np.isnan(x) or np.isnan(y):
+            return pose
+
         grid_x = int((x - self.map_msg.info.origin.position.x) / self.map_msg.info.resolution)
         grid_y = self.map_msg.info.height - int(
             (y - self.map_msg.info.origin.position.y) / self.map_msg.info.resolution
