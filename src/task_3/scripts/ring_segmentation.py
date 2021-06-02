@@ -227,6 +227,33 @@ class RingSegmentation:
 
         return pose
 
+    def fix_distance_from_wall(self, grid_x, grid_y):
+        min_distance = 6
+
+        if self.map[int(grid_y), int(grid_x)][0] == 0:
+            done = False
+            grid_x = int(grid_x)
+            grid_y = int(grid_y)
+            while not done:
+                done = True
+                left = self.check_direction(grid_x, grid_y, dx=-1, target=100)
+                top = self.check_direction(grid_x, grid_y, dy=1, target=100)
+                right = self.check_direction(grid_x, grid_y, dx=1, target=100)
+                bottom = self.check_direction(grid_x, grid_y, dy=-1, target=100)
+                if left[2] < min_distance:
+                    grid_x += 1
+                    done = False
+                if right[2] < min_distance:
+                    grid_x -= 1
+                    done = False
+                if bottom[2] < min_distance:
+                    grid_y += 1
+                    done = False
+                if top[2] < min_distance:
+                    grid_y -= 1
+                    done = False
+        return grid_x, grid_y
+
     def calculate_navigation_pose(self, x, y):
         if np.isnan(x) or np.isnan(y):
             return None
@@ -257,6 +284,8 @@ class RingSegmentation:
 
             grid_x = grid_x + dx * 0.05 * 200
             grid_y = grid_y + dy * 0.05 * 200
+
+            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y)
 
             grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
             grid_x = grid_x * self.map_msg.info.resolution

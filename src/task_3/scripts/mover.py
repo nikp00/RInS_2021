@@ -753,6 +753,8 @@ class Mover:
     def get_face_info(self):
         # res = self.dialog(0)
         print("Dialog OK")
+        if not self.faces.current.mask:
+            self.speak("Please wear a mask!")
         self.state = "read_digits"
 
     def read_digits(self):

@@ -120,10 +120,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>4358 431000000</sim_time>
-      <real_time>1164 86764511</real_time>
-      <wall_time>1622587890 372529147</wall_time>
-      <iterations>890990</iterations>
+      <sim_time>5521 432000000</sim_time>
+      <real_time>1213 907960640</real_time>
+      <wall_time>1622638330 572571845</wall_time>
+      <iterations>1101906</iterations>
       <model name='classroom'>
         <pose>-2 -2 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -145,27 +145,33 @@
         </link>
       </model>
       <light name='user_point_light_0'>
-        <pose>-1.90421 4.58634 1 0 -0 0</pose>
+        <pose>-1.90421 5.9322 1 0 -0 0</pose>
       </light>
       <light name='user_point_light_0_clone'>
-        <pose>4.64305 1.21367 1 0 -0 0</pose>
+        <pose>5.98088 1.21367 1 0 -0 0</pose>
       </light>
       <light name='user_point_light_0_clone_0'>
-        <pose>-3.02977 1.94881 1 0 -0 0</pose>
+        <pose>-4.7014 1.94881 1 0 -0 0</pose>
       </light>
       <light name='user_point_light_0_clone_1'>
-        <pose>-3.80305 -1.77251 1 0 -0 0</pose>
+        <pose>-4.77403 -1.77251 1 0 -0 0</pose>
       </light>
       <light name='user_point_light_0_clone_1_clone'>
-        <pose>4.28448 -3.94583 1 0 -0 0</pose>
+        <pose>4.28448 -4.43769 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_0_clone_1_clone_clone_clone'>
+        <pose>0.087981 -3.61728 1 0 -0 0</pose>
+      </light>
+      <light name='user_point_light_0_clone_1_clone_clone_clone_clone'>
+        <pose>5.24516 4.18278 1 0 -0 0</pose>
       </light>
       <light name='user_point_light_0_clone_clone'>
-        <pose>1.62885 4.26051 1 0 -0 0</pose>
+        <pose>1.62885 5.97759 1 0 -0 0</pose>
       </light>
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>2.52855 6.45925 2.94797 0 0.389795 -1.51338</pose>
+        <pose>0.761453 0.453446 1.79961 0 0.417795 1.14184</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -183,6 +189,11 @@
       </attenuation>
       <cast_shadows>0</cast_shadows>
       <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
     <light name='user_point_light_0_clone' type='point'>
       <pose>4.64305 1.21367 1 0 -0 0</pose>
@@ -196,6 +207,11 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
     <light name='user_point_light_0_clone_clone' type='point'>
       <pose>1.62885 4.26051 1 0 -0 0</pose>
@@ -209,6 +225,11 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
     <light name='user_point_light_0_clone_0' type='point'>
       <pose>-3.02977 1.94881 1 0 -0 0</pose>
@@ -222,6 +243,11 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
     <light name='user_point_light_0_clone_1' type='point'>
       <pose>-3.80305 -1.77251 1 0 -0 0</pose>
@@ -235,9 +261,45 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
     <light name='user_point_light_0_clone_1_clone' type='point'>
       <pose>4.28448 -3.94583 1 0 -0 0</pose>
+      <diffuse>0.494118 0.494118 0.494118 1</diffuse>
+      <specular>0.0941176 0.0941176 0.0941176 1</specular>
+      <direction>0 0 -1</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.1</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
+    </light>
+    <light name='user_point_light_0_clone_1_clone_clone_clone' type='point'>
+      <pose>2.01261 2.35055 1 0 -0 0</pose>
+      <diffuse>0.494118 0.494118 0.494118 1</diffuse>
+      <specular>0.0941176 0.0941176 0.0941176 1</specular>
+      <direction>0 0 -1</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.1</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+    </light>
+    <light name='user_point_light_0_clone_1_clone_clone_clone_clone' type='point'>
+      <pose>5.24516 4.18278 1 0 -0 0</pose>
       <diffuse>0.494118 0.494118 0.494118 1</diffuse>
       <specular>0.0941176 0.0941176 0.0941176 1</specular>
       <direction>0 0 -1</direction>

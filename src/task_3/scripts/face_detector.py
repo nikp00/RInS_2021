@@ -99,9 +99,9 @@ class FaceDetectorDNN:
         if not stamp:
             stamp = rospy.Time.now()
         point_s = PointStamped()
-        point_s.point.x = -y + (nx * 0.8)
+        point_s.point.x = -y + (nx * 0.7)
         point_s.point.y = 0
-        point_s.point.z = x + (nz * 0.8)
+        point_s.point.z = x + (nz * 0.7)
         point_s.header.frame_id = "camera_rgb_optical_frame"
         point_s.header.stamp = stamp
 
