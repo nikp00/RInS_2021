@@ -6,7 +6,10 @@ from cv_bridge import CvBridge
 import pytesseract
 from time import sleep
 import re
-
+from google.cloud import vision
+import io
+import os
+import sys
 from task_3.srv import ExtractDigitsService, ExtractDigitsServiceResponse
 
 
@@ -26,11 +29,13 @@ class DigitExtractor:
 
         self.image_publisher = rospy.Publisher("fine_navigation_image", Image, queue_size=10)
         self.image_publisher123 = rospy.Publisher("fine_navigation_image_out", Image, queue_size=10)
+        self.client = vision.ImageAnnotatorClient()
 
         rospy.spin()
 
     def extract(self, req):
         try:
+            print("START")
             cv_image = self.bridge.imgmsg_to_cv2(
                 rospy.wait_for_message("/camera/rgb/image_raw", Image), "bgr8"
             )
@@ -251,53 +256,77 @@ class DigitExtractor:
                 self.image_publisher123.publish(ros_img)
                 # cv2.imshow('Podobna',img_out)
                 # cv2.waitKey(1)
-                sleep(1)
+                # sleep(1)
 
-                # Pass some options to tesseract
-                config = '--psm 3 outputbase nobatch digits'
-                config1 = '--psm 13 outputbase nobatch digits'
+                ##################################################################################
+                ###############################GOOGLE API RECOGNITION#############################
+                ##################################################################################
+                success, encoded_image = cv2.imencode('.jpg', img_out)
+                content2 = encoded_image.tobytes()
+                image_cv2 = vision.Image(content=content2)
+                response =  self.client.text_detection(image=image_cv2)
+                texts = response.text_annotations
+                number = texts[0].description
 
-                # Visualize the image we are passing to Tesseract
-                # cv2.imshow('Warped image',img_out)
-                # cv2.waitKey(1)
+                number = re.findall('\\d+', number)
 
-                # Extract text from image
-                text = pytesseract.image_to_string(img_out, config=config)
-
-                # Remove any whitespaces from the left and right
-                text = text.strip()
-
-                # If the extracted text is of the right length
-                if len(text)>=2:
-                    x=int(text[0])
-                    y=int(text[1])
-                    if(int(x) >= 1):
-                        bestResult = re.findall('\\d+', text)[0]
-                        if(int(bestResult) < 100):
-                            print("RESULT IS ", bestResult)
-                            return ExtractDigitsServiceResponse(int(bestResult), 0)
+                if(len(number) >= 2):
+                    myNumber = number[0] + number[1]
+                    print("RESULT IS: ", myNumber)
+                    return ExtractDigitsServiceResponse(int(myNumber), 0)
 
 
+                #################################################################################
 
-                # Extract text from image
-                text = pytesseract.image_to_string(img_out, config=config1)
-
-                # Remove any whitespaces from the left and right
-                text = text.strip()
-
-                # If the extracted text is of the right length
-                if len(text)>=2:
-                    x=int(text[0])
-                    y=int(text[1])
-                    if(int(x) >= 1):
-                        bestResult = re.findall('\\d+', text)[0]
-                        if(int(bestResult) <= 100):
-                            print("RESULT IS ", bestResult)
-                            return ExtractDigitsServiceResponse(int(bestResult), 0)
+            #     # Pass some options to tesseract
+            #     config = '--psm 3 outputbase nobatch digits'
+            #     config1 = '--psm 13 outputbase nobatch digits'
+            #
+            #     # Visualize the image we are passing to Tesseract
+            #     # cv2.imshow('Warped image',img_out)
+            #     # cv2.waitKey(1)
+            #
+            #     # Extract text from image
+            #     text = pytesseract.image_to_string(img_out, config=config)
+            #
+            #     # Remove any whitespaces from the left and right
+            #     text = text.strip()
+            #
+            #     # If the extracted text is of the right length
+            #     if len(text)>=2:
+            #         x=int(text[0])
+            #         y=int(text[1])
+            #         if(int(x) >= 1):
+            #             bestResult = re.findall('\\d+', text)[0]
+            #             if(int(bestResult) < 100):
+            #                 print("RESULT IS ", bestResult)
+            #                 return ExtractDigitsServiceResponse(int(bestResult), 0)
+            #
+            #
+            #
+            #     # Extract text from image
+            #     text = pytesseract.image_to_string(img_out, config=config1)
+            #
+            #     # Remove any whitespaces from the left and right
+            #     text = text.strip()
+            #
+            #     # If the extracted text is of the right length
+            #     if len(text)>=2:
+            #         x=int(text[0])
+            #         y=int(text[1])
+            #         if(int(x) >= 1):
+            #             bestResult = re.findall('\\d+', text)[0]
+            #             if(int(bestResult) <= 100):
+            #                 print("RESULT IS ", bestResult)
+            #                 return ExtractDigitsServiceResponse(int(bestResult), 0)
+            #
+            # return ExtractDigitsServiceResponse(0, 1)
 
             return ExtractDigitsServiceResponse(0, 1)
         except:
             return ExtractDigitsServiceResponse(0, 1)
 
 if __name__ == "__main__":
+    auth = sys.argv[1]
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = auth
     DigitExtractor()
