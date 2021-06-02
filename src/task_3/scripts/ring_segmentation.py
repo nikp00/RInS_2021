@@ -196,11 +196,20 @@ class RingSegmentation:
         self.image_publisher.publish(ros_img)
 
     def get_pose(self, e, dist, stamp) -> Pose:
-        k_f = 554
+        k_f = 525
 
         elipse_x = self.dims[1] / 2 - e[0][0]
         angle_to_target = np.arctan2(elipse_x, k_f)
 
+        dist_from_center = abs(self.dims[1] / 2 - e[0][0])
+        dist_compensation = 0.2 / (self.dims[1] / 2)
+
+        print("Dims", self.dims[1])
+        print("Dist form cernter", dist_from_center)
+        print("Compensation", dist_from_center * dist_compensation)
+        dist += dist_compensation * dist_from_center
+
+        # dist = math.sqrt(math.pow(dist, 2) - math.pow(0.71, 2))
         x, y = dist * np.cos(angle_to_target), dist * np.sin(angle_to_target)
         if not stamp:
             stamp = rospy.Time.now()
@@ -229,6 +238,7 @@ class RingSegmentation:
         y = pose.position.y
 
         if np.isnan(x) or np.isnan(y):
+            print("Nan")
             return pose
 
         grid_x = int((x - self.map_msg.info.origin.position.x) / self.map_msg.info.resolution)
@@ -244,11 +254,14 @@ class RingSegmentation:
         dists = [e for e in [left, top, right, bottom] if e[2] != 0]
         min_pose = min(dists, key=lambda x: x[2])
 
+        print("Ring target", target)
         grid_x = min_pose[0]
         grid_y = min_pose[1]
-
-        grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y)
-
+        print("Before", grid_x, grid_y)
+        grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y, min_distance=1)
+        print("After", grid_x, grid_y)
+        print()
+        print()
         grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
         grid_x = grid_x * self.map_msg.info.resolution
         pt = PointStamped()
@@ -318,7 +331,7 @@ class RingSegmentation:
             grid_x = grid_x + dx * 0.05 * 200
             grid_y = grid_y + dy * 0.05 * 200
 
-            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y, 2)
+            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y, 10)
 
             grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
             grid_x = grid_x * self.map_msg.info.resolution
@@ -370,7 +383,8 @@ class RingSegmentation:
                     np.power(pose.position.x - e.obj_pose.position.x, 2)
                     + np.power(pose.position.y - e.obj_pose.position.y, 2)
                 )
-                < 0.5
+                < 0.4
+                and res.color == e.get_color_name()
             ):
 
                 e.add_pose(pose, navigation_pose)
@@ -393,16 +407,27 @@ class RingSegmentation:
             self.seq += 1
             self.rings.append(ring)
 
+        count = {"red": 0, "green": 0, "black": 0, "blue": 0}
+        filtered_rings = {"red": None, "green": None, "black": None, "blue": None}
+
+        for e in self.rings:
+            if count[e.get_color_name()] < e.n_detections:
+                count[e.get_color_name()] = e.n_detections
+                filtered_rings[e.get_color_name()] = e
+
+        filtered_rings = [v for k, v in filtered_rings.items() if v != None]
+
         self.ring_markers_publisher.publish(
-            [e.to_marker() for e in self.rings] + [e.to_navigation_marker() for e in self.rings]
+            [e.to_marker() for e in filtered_rings]
+            + [e.to_navigation_marker() for e in filtered_rings]
         )
-        self.n_detections_marker_publisher.publish([e.to_text() for e in self.rings])
+        self.n_detections_marker_publisher.publish([e.to_text() for e in filtered_rings])
 
         self.ring_pose_publisher.publish(
             PoseAndColorArray(
                 [
                     PoseAndColor(e.obj_pose, e.navigation_pose, e.get_color_name(), e.id)
-                    for e in self.rings
+                    for e in filtered_rings
                     if e.n_detections > self.MIN_DETECTIONS
                 ]
             )

@@ -39,7 +39,7 @@ class CylinderHandler:
         self.tf_buf = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buf)
 
-        self.MIN_DETECTIONS = rospy.get_param("~min_detections", default=2)
+        self.MIN_DETECTIONS = rospy.get_param("~min_detections", default=1)
 
         self.map_msg = rospy.wait_for_message("/map", OccupancyGrid)
         self.map_transform = TransformStamped()
@@ -80,7 +80,7 @@ class CylinderHandler:
         )
 
     def fix_distance_from_wall(self, grid_x, grid_y):
-        min_distance = 6
+        min_distance = 10
 
         if self.map[int(grid_y), int(grid_x)][0] == 0:
             done = False
