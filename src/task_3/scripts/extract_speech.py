@@ -53,7 +53,7 @@ class SpeechTranscriber:
             print("Did not manage to recognize anything.")
             return -1
 
-        print("Recognized: ", recognized_text)
+        #print("Recognized: ", recognized_text)
 
         return recognized_text.lower()
 
@@ -89,7 +89,7 @@ class SpeechTranscriber:
             else:
                 for element in legal_answers:
                     if element in answer:
-                        # print("Detected match: ", element)
+                        print("Detected match: ", element)
                         return answer
 
             self.speak("Sorry, please try again")

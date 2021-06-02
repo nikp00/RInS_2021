@@ -203,8 +203,8 @@ class FaceDetectorDNN:
         face = preprocess_input(face)
         face = np.expand_dims(face, axis=0)
 
-        with tensorflow.device("/gpu:0"):
-            (mask, without_mask) = self.mask_detector.predict(face)[0]
+        #with tensorflow.device("/gpu:0"):
+        (mask, without_mask) = self.mask_detector.predict(face)[0]
 
         return mask, without_mask
 
@@ -439,13 +439,13 @@ class Face:
 
 if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    gpus = tensorflow.config.experimental.list_physical_devices("GPU")
-    if gpus:
-        try:
-            for gpu in gpus:
-                tensorflow.config.experimental.set_memory_growth(gpu, True)
-
-        except RuntimeError as e:
-            print(e)
+    #gpus = tensorflow.config.experimental.list_physical_devices("GPU")
+    #if gpus:
+    #    try:
+     #       for gpu in gpus:
+      #          tensorflow.config.experimental.set_memory_growth(gpu, True)
+#
+ #       except RuntimeError as e:
+  #          print(e)
     fd = FaceDetectorDNN(sys.argv[1:3], sys.argv[3:4])
     cv2.destroyAllWindows()
