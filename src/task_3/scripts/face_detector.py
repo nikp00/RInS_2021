@@ -99,9 +99,9 @@ class FaceDetectorDNN:
         if not stamp:
             stamp = rospy.Time.now()
         point_s = PointStamped()
-        point_s.point.x = -y + (nx * 0.7)
+        point_s.point.x = -y + (nx * 0.5)
         point_s.point.y = 0
-        point_s.point.z = x + (nz * 0.7)
+        point_s.point.z = x + (nz * 0.5)
         point_s.header.frame_id = "camera_rgb_optical_frame"
         point_s.header.stamp = stamp
 
@@ -227,7 +227,7 @@ class FaceDetectorDNN:
         w = self.dims[1]
         for i in range(0, faces.shape[2]):
             confidence = faces[0, 0, i, 2]
-            if confidence > 0.8:
+            if confidence > 0.7:
                 box = faces[0, 0, i, 3:7] * np.array([w, h, w, h])
                 box = box.astype("int")
                 x1, y1, x2, y2 = box[0], box[1], box[2], box[3]
@@ -261,7 +261,7 @@ class FaceDetectorDNN:
                         if np.sqrt(
                             np.power(face_pose.position.x - e.obj_pose.position.x, 2)
                             + np.power(face_pose.position.y - e.obj_pose.position.y, 2)
-                        ) < 0.5 and (
+                        ) < 0.6 and (
                             (enc_available and face_recognition.compare_faces([e.enc], enc)[0])
                             or (mask > without_mask) == e.mask
                             or angle_diff < math.pi / 4

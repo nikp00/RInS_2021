@@ -179,7 +179,7 @@ class Mover:
                 "end",
             ):
                 if self.searching_ring and self.ring_found:
-                    self.state = "move_to_ring"
+                    self.state = "proccess_face"
                 elif self.cylinders.is_new_data() and not any(
                     [self.searching_ring, self.delivering_vaccine]
                 ):
@@ -248,52 +248,58 @@ class Mover:
             elif self.state == "proccess_face":
                 self.searching_cylinder = False
                 self.searching_ring = False
+                if self.faces.current == None:
+                    self.state = "return_to_stored_pose"
+                else:
+                    if not self.faces.current.already_vaccinated:
+                        cylinder = self.cylinders.get_by(self.faces.current.doctor, "color")
+                        print("Cylinder", self.faces.current.doctor)
+                        if cylinder != None and cylinder.clf != None:
+                            vaccine = cylinder.clf.predict(
+                                self.faces.current.age, self.faces.current.hours_of_exercise
+                            )
+                            print("Vaccine", vaccine)
+                            self.faces.current.vaccine = vaccine
+                            ring = self.rings.get_by(vaccine, "vaccine")
 
-                if not self.faces.current.already_vaccinated:
-                    cylinder = self.cylinders.get_by(self.faces.current.doctor, "color")
-                    print("Cylinder", self.faces.current.doctor)
-                    if cylinder != None:
-                        vaccine = cylinder.clf.predict(
-                            self.faces.current.age, self.faces.current.hours_of_exercise
-                        )
-                        print("Vaccine", vaccine)
-                        self.faces.current.vaccine = vaccine
-                        ring = self.rings.get_by(vaccine, "vaccine")
-
-                        if ring != None:
-                            self.rings.current = ring
-                            self.delivering_vaccine = True
-                            self.state = "moving_to_ring"
-                            self.move_to_ring(ring)
+                            if ring != None:
+                                self.rings.current = ring
+                                self.delivering_vaccine = True
+                                self.state = "moving_to_ring"
+                                self.move_to_ring(ring)
+                            else:
+                                self.searching_ring = True
+                                self.state = "return_to_stored_pose"
                         else:
-                            self.searching_ring = True
+                            self.searching_cylinder = True
                             self.state = "return_to_stored_pose"
                     else:
-                        self.searching_cylinder = True
+                        self.vaccinated_faces += 1
                         self.state = "return_to_stored_pose"
-                else:
-                    self.vaccinated_faces += 1
-                    self.state = "return_to_stored_pose"
 
             elif self.state == "give_vaccine":
                 self.speak(f"Here is your {self.faces.current.vaccine} vaccine")
                 self.arm_control_pub.publish("extend")
                 rospy.sleep(3)
                 self.arm_control_pub.publish("retract")
-                self.state = "get_next_waypoint"
                 self.delivering_vaccine = False
                 self.searching_cylinder = False
                 self.searching_ring = False
+                self.faces.current.already_vaccinated = True
                 self.vaccinated_faces += 1
+                self.state = "get_next_waypoint"
 
             elif self.state == "return_to_stored_pose":
-                self.pose_pub.publish(self.stored_pose)
-                self.stored_pose = None
-                self.state = "moving_to_waypoint"
+                if self.stored_pose != None:
+                    self.pose_pub.publish(self.stored_pose)
+                    self.stored_pose = None
+                    self.state = "moving_to_waypoint"
+                else:
+                    self.state = "get_next_waypoint"
             elif self.state == "end":
                 break
 
-            print(self.state, self.delivering_vaccine)
+            print(self.state, self.delivering_vaccine, self.vaccinated_faces)
 
     def get_waypoints(self):
         waypoints = rospy.wait_for_message("/waypoints", PoseArray)
@@ -414,14 +420,15 @@ class Mover:
             self.twist_pub.publish(msg)
             rospy.sleep(2)
 
-            if (
-                self.searching_cylinder
-                and self.faces.current.doctor == self.cylinders.current.color
-            ):
-                self.state = "proccess_face"
-            else:
-                self.state = "return_to_stored_pose"
+            # if (
+            #     self.searching_cylinder
+            #     and self.faces.current.doctor == self.cylinders.current.color
+            # ):
+            #     self.state = "proccess_face"
+            # else:
+            #     self.state = "return_to_stored_pose"
 
+            self.state = "proccess_face"
         else:
             print("No QR code found, fixing orientation")
             msg = Twist()
@@ -638,6 +645,10 @@ class Mover:
         self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
 
     def approach_ring(self):
+        self.state = "moving_to_face"
+        self.move_to_face(self.faces.current)
+        return
+
         ring = self.rings.current
 
         cv_image = self.bridge.imgmsg_to_cv2(

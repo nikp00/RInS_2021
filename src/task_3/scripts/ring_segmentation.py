@@ -328,10 +328,10 @@ class RingSegmentation:
             dx = direction[0] / magnitude
             dy = direction[1] / magnitude
 
-            grid_x = grid_x + dx * 0.05 * 200
-            grid_y = grid_y + dy * 0.05 * 200
+            grid_x = grid_x + dx * 0.05 * 50
+            grid_y = grid_y + dy * 0.05 * 50
 
-            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y, 10)
+            grid_x, grid_y = self.fix_distance_from_wall(grid_x, grid_y, 5)
 
             grid_y = (self.map_msg.info.height - grid_y) * self.map_msg.info.resolution
             grid_x = grid_x * self.map_msg.info.resolution
