@@ -7,6 +7,7 @@ import tf2_ros
 import tf
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
+import copy
 
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import (
@@ -206,7 +207,7 @@ class Mover:
                     next_waypoint = self.waypoints.history.pop()
                     current_pose = self.get_current_pose()
                     next_waypoint.pose.orientation = self.fix_angle(
-                        next_waypoint.pose, current_pose
+                        next_waypoint.pose, current_pose.pose
                     )
                     self.send_next_waypoint(next_waypoint.pose)
                     self.state = "moving_to_waypoint"
@@ -248,7 +249,7 @@ class Mover:
             elif self.state == "proccess_face":
                 self.searching_cylinder = False
                 self.searching_ring = False
-                if self.faces.current == None:
+                if self.faces.current == None or self.faces.current.proccessed:
                     self.state = "return_to_stored_pose"
                 else:
                     if not self.faces.current.already_vaccinated:
@@ -258,7 +259,7 @@ class Mover:
                             vaccine = cylinder.clf.predict(
                                 self.faces.current.age, self.faces.current.hours_of_exercise
                             )
-                            print("Vaccine", vaccine)
+                            print("Vaccine", vaccine, "Cylinder", cylinder.color)
                             self.faces.current.vaccine = vaccine
                             ring = self.rings.get_by(vaccine, "vaccine")
 
@@ -275,6 +276,7 @@ class Mover:
                             self.state = "return_to_stored_pose"
                     else:
                         self.vaccinated_faces += 1
+                        self.faces.current.proccessed = True
                         self.state = "return_to_stored_pose"
 
             elif self.state == "give_vaccine":
@@ -286,6 +288,7 @@ class Mover:
                 self.searching_cylinder = False
                 self.searching_ring = False
                 self.faces.current.already_vaccinated = True
+                self.faces.current.proccessed = True
                 self.vaccinated_faces += 1
                 self.state = "get_next_waypoint"
 
@@ -379,14 +382,14 @@ class Mover:
                 waypoint = e
 
         if fix_angle:
-            waypoint.pose.orientation = self.fix_angle(waypoint.pose, start)
+            waypoint.pose.orientation = self.fix_angle(waypoint.pose, start.pose)
 
         self.waypoints.set_current(waypoint)
         return waypoint
 
-    def fix_angle(self, pose: Pose, current_pose: PoseStamped) -> Quaternion:
-        dx = pose.position.x - current_pose.pose.position.x
-        dy = pose.position.y - current_pose.pose.position.y
+    def fix_angle(self, pose: Pose, current_pose: Pose) -> Quaternion:
+        dx = pose.position.x - current_pose.position.x
+        dy = pose.position.y - current_pose.position.y
         return Quaternion(*list(tf.transformations.quaternion_from_euler(0, 0, math.atan2(dy, dx))))
 
     def send_next_waypoint(self, waypoint: Pose):
@@ -414,6 +417,10 @@ class Mover:
         if res.status == 0:
             print("Detected QR code:", res.data)
             self.cylinders.current.add_clf(str(res.data))
+
+            self.speak(
+                f"I just consulted with doctor {self.cylinders.current.color} about which vaccine is the best choice for his patients."
+            )
 
             msg = Twist()
             msg.linear.x = -0.5
@@ -641,12 +648,16 @@ class Mover:
         msg.header.frame_id = "map"
         msg.pose = ring.navigation_pose
 
+        msg.pose.orientation = self.fix_angle(ring.obj_pose, msg.pose)
+
         self.pose_pub.publish(msg)
         self.waypoint_markers.markers.append(self.create_marker(self.seq + 100, msg.pose, b=1))
 
     def approach_ring(self):
         self.state = "moving_to_face"
+
         self.move_to_face(self.faces.current)
+        self.speak(f"I just picked up the {self.faces.current.vaccine} vaccine.")
         return
 
         ring = self.rings.current
@@ -873,7 +884,7 @@ class Mover:
                     print("No digits found, fixing orientation")
                     msg = Twist()
                     msg.angular.z = 0.05
-                    msg.linear.x = 0.05
+                    # msg.linear.x = 0.01
                     self.twist_pub.publish(msg)
                     rospy.sleep(1)
                 else:
@@ -971,9 +982,10 @@ class Mover:
                     return
 
     def check_social_distance(self):
-        for e in self.faces.data.values():
+        faces_copy = copy.deepcopy(self.faces.data)
+        for e, ke in faces_copy.items():
             e_angle = self.to_euler(e.navigation_pose.orientation)
-            for f in self.faces.data.values():
+            for f, kf in faces_copy.items():
                 if f == e:
                     continue
                 f_angle = self.to_euler(f.navigation_pose.orientation)
@@ -998,6 +1010,8 @@ class Mover:
                         )
                     )
 
+                    self.faces.data[ke].warned = True
+                    self.faces.data[kf].warned = True
                     e.warned = True
                     f.warned = True
 
@@ -1230,7 +1244,7 @@ class Face:
         self.doctor = None
         self.vaccine = None
         self.already_vaccinated = False
-        self.visited = False
+        self.proccessed = False
 
     def update(self, obj):
         self.obj_pose = obj.obj_pose

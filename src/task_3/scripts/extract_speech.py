@@ -15,7 +15,7 @@ class SpeechTranscriber:
         self.mic = sr.Microphone()
 
         self.affirmative_answers = ["yes", "i have", "i do"]
-        self.negative_answers = ["no", "not", "i don't"]
+        self.negative_answers = ["no", "i haven't", "not", "i don't"]
         self.doctors = ["green", "red", "blue", "black", "yellow"]
 
         self.sr.dynamic_energy_threshold = False
@@ -53,7 +53,7 @@ class SpeechTranscriber:
             print("Did not manage to recognize anything.")
             return -1
 
-        #print("Recognized: ", recognized_text)
+        # print("Recognized: ", recognized_text)
 
         return recognized_text.lower()
 
@@ -79,6 +79,7 @@ class SpeechTranscriber:
                 if any(char.isdigit() for char in answer):
                     # extract number from answer
                     number = int("".join(filter(str.isdigit, answer)))
+                    print(number)
                     if number > 0:
                         return number
                 else:
@@ -88,9 +89,9 @@ class SpeechTranscriber:
             # elif any (element in answer for element in legal_answers):
             else:
                 for element in legal_answers:
-                    if element in answer:
-                        print("Detected match: ", element)
-                        return answer
+                    if element in answer.split(" "):
+                        print("Detected match: ", element, "  |   ", answer)
+                        return element
 
             self.speak("Sorry, please try again")
             print("Sorry, please try again")
@@ -140,6 +141,7 @@ class SpeechTranscriber:
 
         self.speak("Thank you, that is it.")
 
+        print(answers)
         print("-------DONE-------")
 
         return answers
